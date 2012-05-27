@@ -15,6 +15,11 @@
         {% endwith %}
     </div>
     <div id="password_change">
-        <a href="{% url password_change %}">{% trans "Change your password" %}</a></p>
+        <p><a href="{% url password_change %}">{% trans "Change your password" %}</a></p>
+        {% if not user.facebook_id %}
+            <p><a href="{% url facebook_linkAccount %}">{% trans "Link account with Facebook" %}</a></p>
+        {% elif not user.twitter_id %}
+            <p><a href="{% url home %}">{% trans "Link account with Twitter" %}</a></p>
+        {% endif %}
     </div>
 {% endblock %}

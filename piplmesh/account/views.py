@@ -51,6 +51,16 @@ class FacebookCallbackView(generic_views.RedirectView):
             # TODO: Use information provided from facebook as to why the login was not successful
             return super(FacebookCallbackView, self).get(request, *args, **kwargs)
 
+class FacebookLinkView(generic_views.RedirectView):
+    """
+    Authentication callback. Redirects user to LOGIN_REDIRECT_URL.
+    """
+
+    permanent = False
+    # TODO: Redirect users to the page they initially came from
+    url = settings.FACEBOOK_LOGIN_REDIRECT
+
+
 class TwitterLoginView(generic_views.RedirectView):
     """
     This view authenticates the user via Twitter.

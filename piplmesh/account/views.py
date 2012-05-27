@@ -53,12 +53,33 @@ class FacebookCallbackView(generic_views.RedirectView):
 
 class FacebookLinkView(generic_views.RedirectView):
     """
-    Authentication callback. Redirects user to LOGIN_REDIRECT_URL.
+    This view links account with facebook.
     """
 
     permanent = False
     # TODO: Redirect users to the page they initially came from
     url = settings.FACEBOOK_LOGIN_REDIRECT
+
+    def get(self, request, *args, **kwargs):
+        if request.user.facebook_id:
+            messages.error(self.request, _("Your account is already linked with Facebook."))
+        return super(FacebookLinkView, self).get(request, *args, **kwargs)
+
+class FacebookUnlinkView(generic_views.RedirectView):
+    """
+    This view unlinks account with facebook.
+    """
+
+    permanent = False
+    # TODO: Redirect users to the page they initially came from
+    url = settings.FACEBOOK_LOGIN_REDIRECT
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.facebook_id:
+            messages.error(self.request, _("Your account is not yet linked with Facebook."))
+        # Remove facebook_id, facebook_token and facebook_link
+        
+        return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
 
 
 class TwitterLoginView(generic_views.RedirectView):

@@ -78,7 +78,7 @@ class FacebookUnlinkView(generic_views.RedirectView):
         if not request.user.facebook_id:
             messages.error(self.request, _("Your account is not yet linked with Facebook."))
         # Remove facebook_id, facebook_token and facebook_link
-        
+
         return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
 
 

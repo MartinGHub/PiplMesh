@@ -65,6 +65,8 @@ class FacebookBackend(MongoEngineBackend):
         # TODO: Check if id and other fields are returned
         # TODO: Move user retrieval/creation to User document/manager
         # TODO: get_or_create implementation has in fact a race condition, is this a problem?
+        # TODO: What if username already exists ?
+        # TODO: What about password (maybe redirect to create password page) ?
         user, created = self.user_class.objects.get_or_create(
             facebook_id=fb.get('id'),
             defaults={
@@ -91,7 +93,9 @@ class TwitterBackend(MongoEngineBackend):
         twitter_auth.set_access_token(twitter_token.key, twitter_token.secret)
         api = tweepy.API(twitter_auth)
         twitter_user = api.me()
-        print twitter_user.id
+
+        # TODO: What if username already exists ?
+        # TODO: What about password (maybe redirect to create password page) ?
         user, created = self.user_class.objects.get_or_create(
             twitter_id = twitter_user.id,
             defaults = {

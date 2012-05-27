@@ -5,6 +5,7 @@ import tweepy
 
 register = template.Library()
 
+# TODO: Also get larger picture (like facebook)
 @register.simple_tag
 def twitter_picture(token_key, token_secret):
     twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)

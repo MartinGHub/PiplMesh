@@ -1,6 +1,6 @@
 {% extends "plain.html" %}
 
-{% load i18n facebook gravatar %}
+{% load i18n facebook twitter gravatar %}
 
 {% block title %}{{ object.username }}{% endblock %}
 
@@ -14,6 +14,9 @@
     <div id="picture" >
         {% if object.facebook_id %}
             <img src="{% facebook_picture object.facebook_id "large" %}" alt="{% trans "User picture" %}" />
+        {% elif user.twitter_id %}
+            <! height and width is set only temporary until we fix TODO in twitter.py  >
+            <img src="{% twitter_picture user.twitter_token_key user.twitter_token_secret %}" height="200" width="200" alt="{% trans "User picture" %}" />
         {% else %}
             {% gravatar object 200 %}
         {% endif %}
@@ -24,10 +27,14 @@
         <p>{% trans "Gender:" %} {{ object.gender }}</p>
         <p>{% trans "Birthdate:" %} {{ object.birthdate }}</p>
         <p>{% trans "E-mail:" %} {{ object.email }}</p>
-        <p>{% trans "Last login:" %} {{ object.last_login }}</p>
-        {% if object.facebook_id %}
-            <p><a href="{{ object.facebook_link }}"><img src="{{ STATIC_URL }}piplmesh/images/fb_logo.png" height="30" width="30" alt="{% trans "Facebook link" %}" /></a></p>
-        {% endif %}
+        <p>{% trans "Last login:" %} {{ object.last_login }}
+        <p>
+            {% if object.facebook_id %}
+                <a href="{{ object.facebook_link }}"><img src="{{ STATIC_URL }}piplmesh/images/fb_logo.png" height="30" width="30" alt="{% trans "Facebook link" %}" /></a>
+            {% elif user.twitter_id %}
+                <a href="http://twitter.com/#!/{{ object.username }}"><img src="{{ STATIC_URL }}piplmesh/images/twitter_logo.png" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
+            {% endif %}
+        </p>
         <br/>
         <br/>
         <br/>

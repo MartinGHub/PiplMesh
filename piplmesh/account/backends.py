@@ -91,11 +91,13 @@ class TwitterBackend(MongoEngineBackend):
         twitter_auth.set_access_token(twitter_token.key, twitter_token.secret)
         api = tweepy.API(twitter_auth)
         twitter_user = api.me()
+        print twitter_user.id
         user, created = self.user_class.objects.get_or_create(
             twitter_id = twitter_user.id,
             defaults = {
                 'username': twitter_user.screen_name,
                 'first_name': twitter_user.name,
+                # TODO: Get email via twitter
             }
         )
         user.twitter_token_key = twitter_token.key

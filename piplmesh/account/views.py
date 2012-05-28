@@ -44,6 +44,9 @@ class FacebookCallbackView(generic_views.RedirectView):
         if 'code' in request.GET:
             # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code'
             user = auth.authenticate(facebook_token=request.GET['code'], request=request)
+            if user is None:
+                messages.error(request, _("Please register with another username and then link your account with Facebook."))
+                return shortcuts.redirect('registration')
             auth.login(request, user)
             if not user.password:
                 messages.error(request, _("Before proceeding please set up your password."))
@@ -116,6 +119,9 @@ class TwitterCallbackView(generic_views.RedirectView):
             twitter_auth.set_request_token(request_token.key, request_token.secret)
             twitter_auth.get_access_token(verifier=oauth_verifier)
             user = auth.authenticate(twitter_token=twitter_auth.access_token, request=request)
+            if user is None:
+                messages.error(request, _("Please register with another username and then link your account with Twitter."))
+                return shortcuts.redirect('registration')
             assert user.is_authenticated()
             auth.login(request, user)
             if not user.password:

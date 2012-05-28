@@ -65,21 +65,23 @@ class FacebookBackend(MongoEngineBackend):
         # TODO: Check if id and other fields are returned
         # TODO: Move user retrieval/creation to User document/manager
         # TODO: get_or_create implementation has in fact a race condition, is this a problem?
-        # TODO: What if username already exists ?
-        user, created = self.user_class.objects.get_or_create(
-            facebook_id=fb.get('id'),
-            defaults={
-                'username': fb.get('username', fb.get('first_name') + fb.get('last_name')),
-                'first_name': fb.get('first_name'),
-                'last_name': fb.get('last_name'),
-                'email': fb.get('email'),
-                'gender': fb.get('gender'),
-                'facebook_link': fb.get('link'),
-            }
-        )
-        user.facebook_token = access_token
-        user.save()
-        return user
+        try:
+            user, created = self.user_class.objects.get_or_create(
+                facebook_id=fb.get('id'),
+                defaults={
+                    'username': fb.get('username', fb.get('first_name') + fb.get('last_name')),
+                    'first_name': fb.get('first_name'),
+                    'last_name': fb.get('last_name'),
+                    'email': fb.get('email'),
+                    'gender': fb.get('gender'),
+                    'facebook_link': fb.get('link'),
+                    }
+            )
+            user.facebook_token = access_token
+            user.save()
+            return user
+        except Exception:
+            return None
 
 class TwitterBackend(MongoEngineBackend):
     """
@@ -92,16 +94,18 @@ class TwitterBackend(MongoEngineBackend):
         api = tweepy.API(twitter_auth)
         twitter_user = api.me()
 
-        # TODO: What if username already exists ?
-        user, created = self.user_class.objects.get_or_create(
-            twitter_id = twitter_user.id,
-            defaults = {
-                'username': twitter_user.screen_name,
-                'first_name': twitter_user.name,
-                # TODO: Get email via twitter
-            }
-        )
-        user.twitter_token_key = twitter_token.key
-        user.twitter_token_secret = twitter_token.secret
-        user.save()
-        return user
+        try:
+            user, created = self.user_class.objects.get_or_create(
+                twitter_id = twitter_user.id,
+                defaults = {
+                    'username': twitter_user.screen_name,
+                    'first_name': twitter_user.name,
+                    # TODO: Get email via twitter
+                }
+            )
+            user.twitter_token_key = twitter_token.key
+            user.twitter_token_secret = twitter_token.secret
+            user.save()
+            return user
+        except Exception:
+            return None

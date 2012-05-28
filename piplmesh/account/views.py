@@ -45,6 +45,9 @@ class FacebookCallbackView(generic_views.RedirectView):
             # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code'
             user = auth.authenticate(facebook_token=request.GET['code'], request=request)
             auth.login(request, user)
+            if not user.password:
+                messages.error(request, _("Before proceeding please set up your password."))
+                return shortcuts.redirect('password_create')
             return super(FacebookCallbackView, self).get(request, *args, **kwargs)
         else:
             # TODO: Message user that they have not been logged in because they cancelled the facebook app
@@ -115,6 +118,9 @@ class TwitterCallbackView(generic_views.RedirectView):
             user = auth.authenticate(twitter_token=twitter_auth.access_token, request=request)
             assert user.is_authenticated()
             auth.login(request, user)
+            if not user.password:
+                messages.error(request, _("Before proceeding please set up your password."))
+                return shortcuts.redirect('password_create')
             return super(TwitterCallbackView, self).get(request, *args, **kwargs)
         else:
             # TODO: Message user that they have not been logged in because they cancelled the twitter app
@@ -190,6 +196,9 @@ class AccountChangeView(edit_views.FormView):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated():
             return shortcuts.redirect('login')
+        if not request.user.password:
+            messages.error(request, _("Before proceeding to your account page, you must set up your password."))
+            return shortcuts.redirect('password_create')
         return super(AccountChangeView, self).dispatch(request, *args, **kwargs)
 
     def get_form(self, form_class):
@@ -203,6 +212,28 @@ class AccountChangeView(edit_views.FormView):
             'gender': self.request.user.gender,
             'birthdate': self.request.user.birthdate,
         }
+
+class PasswordCreateView(edit_views.FormView):
+    """
+    This view displays form for creating password.
+    """
+
+    template_name = 'user/password_create.html'
+    form_class = forms.UserPasswordForm
+    success_url = urlresolvers.reverse_lazy('account')
+
+    def form_valid(self, form):
+        self.request.user.set_password(form.cleaned_data['password1'])
+        messages.success(self.request, _("You have successfully set your password."))
+        return super(PasswordCreateView, self).form_valid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return shortcuts.redirect('login')
+        if request.user.password:
+            messages.error(request, _("You already have password set."))
+            return shortcuts.redirect('home')
+        return super(PasswordCreateView, self).dispatch(request, *args, **kwargs)
 
 class PasswordChangeView(edit_views.FormView):
     """

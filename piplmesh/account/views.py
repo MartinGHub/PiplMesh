@@ -14,7 +14,7 @@ from pushserver.utils import updates
 
 import tweepy
 
-from piplmesh.account import forms, models
+from piplmesh.account import backends, forms, models
 
 class FacebookLoginView(generic_views.RedirectView):
     """ 
@@ -59,6 +59,21 @@ class FacebookCallbackView(generic_views.RedirectView):
 
 class FacebookLinkView(generic_views.RedirectView):
     """
+    This view authenticates the user via Facebook.
+    """
+
+    permanent = False
+
+    def get_redirect_url(self, **kwargs):
+        args = {
+            'client_id': settings.FACEBOOK_APP_ID,
+            'scope': settings.FACEBOOK_SCOPE,
+            'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_link_callback')),
+            }
+        return "https://www.facebook.com/dialog/oauth?%(args)s" % {'args': urllib.urlencode(args)}
+
+class FacebookLinkCallbackView(generic_views.RedirectView):
+    """
     This view links account with facebook.
     """
 
@@ -67,9 +82,20 @@ class FacebookLinkView(generic_views.RedirectView):
     url = settings.FACEBOOK_LOGIN_REDIRECT
 
     def get(self, request, *args, **kwargs):
-        if request.user.facebook_id:
-            messages.error(self.request, _("Your account is already linked with Facebook."))
-        return super(FacebookLinkView, self).get(request, *args, **kwargs)
+        if 'code' in request.GET:
+            # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code'
+            if not request.user.is_authenticated():
+                return shortcuts.redirect('login')
+            if request.user.facebook_id:
+                messages.error(self.request, _("Your account is already linked with Facebook."))
+            else:
+                user = backends.facebookLink(facebook_token=request.GET['code'], request=request)
+                messages.success(request, _("You have successfully linked your account with Facebook."))
+            return super(FacebookLinkCallbackView, self).get(request, *args, **kwargs)
+        else:
+            # TODO: Message user that they have not been logged in because they cancelled the facebook app
+            # TODO: Use information provided from facebook as to why the login was not successful
+            return super(FacebookLinkCallbackView, self).get(request, *args, **kwargs)
 
 class FacebookUnlinkView(generic_views.RedirectView):
     """
@@ -81,12 +107,16 @@ class FacebookUnlinkView(generic_views.RedirectView):
     url = settings.FACEBOOK_LOGIN_REDIRECT
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return shortcuts.redirect('login')
         if not request.user.facebook_id:
             messages.error(self.request, _("Your account is not yet linked with Facebook."))
-        # Remove facebook_id, facebook_token and facebook_link
-
+        else:
+            request.user.facebook_id = None
+            request.user.facebook_token = None
+            request.user.facebook_link = None
+            request.user.save()
         return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
-
 
 class TwitterLoginView(generic_views.RedirectView):
     """

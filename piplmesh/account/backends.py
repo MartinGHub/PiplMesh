@@ -109,3 +109,32 @@ class TwitterBackend(MongoEngineBackend):
             return user
         except Exception:
             return None
+
+def facebookLink(facebook_token=None, request=None):
+    """
+    Method for linking account with Facebook.
+    """
+
+    args = {
+        'client_id': settings.FACEBOOK_APP_ID,
+        'client_secret': settings.FACEBOOK_APP_SECRET,
+        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_link_callback')),
+        'code': facebook_token,
+        }
+
+    # Retrieve access token
+    url = urllib.urlopen('https://graph.facebook.com/oauth/access_token?%s' % urllib.urlencode(args)).read()
+    response = urlparse.parse_qs(url)
+    access_token = response['access_token'][-1]
+
+    # Retrieve user's public profile information
+    data = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % access_token)
+    fb = json.load(data)
+
+    # TODO: delete current fb account !!!
+
+    request.user.facebook_id = fb.get('id')
+    request.user.facebook_token = access_token
+    request.user.facebook_link = fb.get('link')
+    request.user.save()
+    return None

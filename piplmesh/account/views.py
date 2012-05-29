@@ -191,9 +191,10 @@ class RegistrationView(edit_views.FormView):
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
             email=form.cleaned_data['email'],
-            gender=form.cleaned_data['gender'],
             birthdate=form.cleaned_data['birthdate'],
         )
+        if form.cleaned_data['gender']:
+            new_user.gender = form.cleaned_data['gender']
         new_user.set_password(form.cleaned_data['password2'])
         new_user.save()
         # We update user with authentication data

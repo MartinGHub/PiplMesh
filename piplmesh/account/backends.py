@@ -45,23 +45,8 @@ class FacebookBackend(MongoEngineBackend):
         exists. If not, a new user is created. Finally, the user's Facebook
         data is saved.
         """
-    
-        args = {
-            'client_id': settings.FACEBOOK_APP_ID,
-            'client_secret': settings.FACEBOOK_APP_SECRET,
-            'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
-            'code': facebook_token,
-        }
-    
-        # Retrieve access token
-        url = urllib.urlopen('https://graph.facebook.com/oauth/access_token?%s' % urllib.urlencode(args)).read()
-        response = urlparse.parse_qs(url)
-        access_token = response['access_token'][-1]
-    
-        # Retrieve user's public profile information
-        data = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % access_token)
-        fb = json.load(data)
 
+        fb, access_token = getFBData(facebook_token, request, 'facebook_callback')
         # TODO: Check if id and other fields are returned
         # TODO: Move user retrieval/creation to User document/manager
         # TODO: get_or_create implementation has in fact a race condition, is this a problem?
@@ -110,15 +95,15 @@ class TwitterBackend(MongoEngineBackend):
         except Exception:
             return None
 
-def facebookLink(facebook_token=None, request=None):
+def getFBData(facebook_token, request, redirect):
     """
-    Method for linking account with Facebook.
+    This method gets data from Facebook and returns it.
     """
 
     args = {
         'client_id': settings.FACEBOOK_APP_ID,
         'client_secret': settings.FACEBOOK_APP_SECRET,
-        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_link_callback')),
+        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse(redirect)),
         'code': facebook_token,
         }
 
@@ -131,7 +116,20 @@ def facebookLink(facebook_token=None, request=None):
     data = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % access_token)
     fb = json.load(data)
 
-    # TODO: delete current fb account !!!
+    return fb, access_token
+
+def facebookLink(facebook_token=None, request=None):
+    """
+    Method for linking account with Facebook.
+    """
+
+    fb, access_token = getFBData(facebook_token, request, 'facebook_link_callback')
+
+    try:
+        user = models.User.objects.get(facebook_id=fb.get('id'))
+        user.delete()
+    except Exception:
+        pass
 
     request.user.facebook_id = fb.get('id')
     request.user.facebook_token = access_token

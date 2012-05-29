@@ -1,6 +1,6 @@
 {% extends "plain.html" %}
 
-{% load i18n facebook twitter gravatar %}
+{% load i18n facebook gravatar %}
 
 {% block title %}{{ object.username }}{% endblock %}
 
@@ -14,9 +14,6 @@
     <div id="picture" >
         {% if object.facebook_id %}
             <img src="{% facebook_picture object.facebook_id "large" %}" alt="{% trans "User picture" %}" />
-        {% elif object.twitter_id %}
-            <! height and width is set only temporary until we fix TODO in twitter.py  >
-            <img src="{% twitter_picture object.twitter_token_key object.twitter_token_secret %}" height="200" width="200" alt="{% trans "User picture" %}" />
         {% else %}
             {% gravatar object 200 %}
         {% endif %}

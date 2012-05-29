@@ -60,7 +60,7 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(settings_dir, 'media')
+#MEDIA_ROOT = os.path.join(settings_dir, 'media')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -97,6 +97,14 @@ STATICFILES_FINDERS = (
 #   'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+DEFAULT_FILE_STORAGE = 'piplmesh.utils.storage.GridFSStorage'
+
+# URL prefix for internationalization URLs
+I18N_URL = '/i18n/'
+
+# URL prefix for django-pushserver passthrough callbacks
+PUSH_SERVER_URL = '/passthrough/'
+
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '02dl2nfiacp)87-1g2$=l@b(q5+qs^)qo=byzdvgx+35q)gw&^'
 
@@ -128,8 +136,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'piplmesh.account.middleware.UserBasedLocaleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'piplmesh.account.middleware.UserBasedLocaleMiddleware',
+    'piplmesh.frontend.middleware.NodesMiddleware',
 )
 
 ROOT_URLCONF = 'piplmesh.urls'
@@ -148,6 +157,7 @@ INSTALLED_APPS = (
     'piplmesh.account',
     'piplmesh.api',
     'piplmesh.frontend',
+    'piplmesh.nodes',
     'piplmesh.utils',
 
     'django.contrib.messages',
@@ -177,7 +187,7 @@ PUSH_SERVER = {
             'create_on_get': True,
             'allow_origin': 'http://127.0.0.1:8000',
             'allow_credentials': True,
-            'passthrough': 'http://127.0.0.1:8000/passthrough/',
+            'passthrough': 'http://127.0.0.1:8000' + PUSH_SERVER_URL,
         },
         {
             'type': 'publisher',
@@ -253,6 +263,17 @@ TEST_RUNNER_FILTER = (
     'piplmesh.',
 )
 
+NODES_BACKENDS = (
+    'piplmesh.nodes.backends.RandomNodesBackend',
+)
+
+NODES_MIDDLEWARE_EXCEPTIONS = (
+    MEDIA_URL,
+    STATIC_URL,
+    I18N_URL,
+    PUSH_SERVER_URL,
+)
+
 # Facebook settings
 # Site URL for Facebook app is set to http://127.0.0.1:8000/
 # so run your development server on port 8000
@@ -275,5 +296,7 @@ TWITTER_LOGIN_REDIRECT = '/'
 # you will be explicitly warned that you have to change the code to take effect, before you will make the change.
 # Current settings are autocomplete, searching whole web.
 SEARCH_ENGINE_UNIQUE_ID = '003912915932446183218:zeq20qye9oa'
+
+DEFAULT_USER_IMAGE = 'piplmesh/images/unknown.png'
 
 CSRF_FAILURE_VIEW = 'piplmesh.frontend.views.forbidden_view'

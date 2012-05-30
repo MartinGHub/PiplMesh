@@ -10,6 +10,12 @@ GENDER_CHOICES = (
     ('female', _("female")),
 )
 
+IMAGE_CHOICES = (
+    ('gravatar', _("Gravatar")),
+    ('twitter', _("Twitter")),
+    ('facebook', _("Facebook")),
+    )
+
 ERROR_MESSAGES = {
     'bounds': _("Value is out of bounds."),
     'callable': _("Callable did not return datetime.date or datetime.datetime object."),
@@ -74,6 +80,14 @@ class GenderField(mongoengine.StringField):
         kwargs.setdefault('choices', GENDER_CHOICES)
 
         super(GenderField, self).__init__(*args, **kwargs)
+
+class ProfileImageField(mongoengine.StringField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('max_length', 10)
+        kwargs.setdefault('choices', IMAGE_CHOICES)
+        kwargs.setdefault('default', IMAGE_CHOICES[1][0])
+
+        super(ProfileImageField, self).__init__(*args, **kwargs)
 
 class LimitedDateTimeField(mongoengine.DateTimeField):
     """

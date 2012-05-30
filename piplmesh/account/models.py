@@ -37,6 +37,8 @@ class User(auth.User):
     gender = fields.GenderField()
     language = fields.LanguageField()
 
+    profile_image = fields.ProfileImageField()
+
     facebook_id = mongoengine.IntField()
     facebook_token = mongoengine.StringField(max_length=150)
     facebook_link = mongoengine.StringField(max_length=100)
@@ -50,18 +52,21 @@ class User(auth.User):
     is_online = mongoengine.BooleanField(default=False)
     
     def get_image_url(self, request):
-        if self.twitter_id:
+        # TODO: Save images after each login, so you don't have to contact facebook or twitter on each request
+        if self.profile_image == 'twitter':
             twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)
             twitter_auth.set_access_token(self.twitter_token_key, self.twitter_token_secret)
             return tweepy.API(twitter_auth).me().profile_image_url
         
-        elif self.facebook_id:
+        elif self.profile_image == 'facebook':
             return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_id)
         
         else:
             default_url = request.build_absolute_uri(staticfiles_storage.url(settings.DEFAULT_USER_IMAGE))
-
-            return 'https://secure.gravatar.com/avatar/%(email_hash)s?s=50&d=%(default_url)s' % {
-                'email_hash': hashlib.md5(self.email.lower()).hexdigest(),
-                'default_url': default_url,
-            }
+            if self.email:
+                return 'https://secure.gravatar.com/avatar/%(email_hash)s?s=50&d=%(default_url)s' % {
+                    'email_hash': hashlib.md5(self.email.lower()).hexdigest(),
+                    'default_url': default_url,
+                }
+            else:
+                return default_url

@@ -117,6 +117,12 @@ class UserAdditionalInfoForm(forms.Form):
     Class with user additional information form.
     """
 
+    profile_image = forms.ChoiceField(
+        label=_("Profile image"),
+        choices=fields.IMAGE_CHOICES,
+        required=False,
+    )
+
 class RegistrationForm(UserUsernameForm, UserPasswordForm, UserBasicInfoForm):
     """
     Class with registration form.

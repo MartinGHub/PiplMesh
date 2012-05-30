@@ -233,6 +233,7 @@ class AccountChangeView(edit_views.FormView):
         user.email=form.cleaned_data['email']
         user.gender=form.cleaned_data['gender'] or None
         user.birthdate=form.cleaned_data['birthdate']
+        user.profile_image=form.cleaned_data['profile_image']
         user.save()
         messages.success(self.request, _("Your account has been successfully updated."))
         return super(AccountChangeView, self).form_valid(form)
@@ -255,6 +256,7 @@ class AccountChangeView(edit_views.FormView):
             'email': self.request.user.email,
             'gender': self.request.user.gender,
             'birthdate': self.request.user.birthdate,
+            'profile_image': self.request.user.profile_image,
         }
 
 class PasswordCreateView(edit_views.FormView):

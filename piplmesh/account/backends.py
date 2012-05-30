@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core import urlresolvers
 
 from mongoengine.django import auth
-from mongoengine.queryset import OperationError
+from mongoengine.queryset import DoesNotExist, OperationError
 
 import tweepy
 
@@ -158,7 +158,7 @@ def facebookLink(facebook_token=None, request=None):
     try:
         user = models.User.objects.get(facebook_id=fb.get('id'))
         user.delete()
-    except Exception:
+    except DoesNotExist:
         pass
 
     # Save information to user
@@ -184,7 +184,7 @@ def twitterLink(twitter_token=None, request=None):
     try:
         user = models.User.objects.get(twitter_id=twitter_user.id)
         user.delete()
-    except Exception:
+    except DoesNotExist:
         pass
 
     # Save information to user

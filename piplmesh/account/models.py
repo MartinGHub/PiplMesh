@@ -53,6 +53,7 @@ class User(auth.User):
     
     def get_image_url(self, request):
         # TODO: Save images after each login, so you don't have to contact facebook or twitter on each request
+
         if self.profile_image == 'twitter':
             twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)
             twitter_auth.set_access_token(self.twitter_token_key, self.twitter_token_secret)

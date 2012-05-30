@@ -117,11 +117,16 @@ class UserAdditionalInfoForm(forms.Form):
     Class with user additional information form.
     """
 
-    profile_image = forms.ChoiceField(
-        label=_("Profile image"),
-        choices=fields.IMAGE_CHOICES,
-        required=False,
-    )
+    profile_image = forms.ChoiceField()
+
+    def __init__(self, *args, **kwargs):
+        super(UserAdditionalInfoForm, self).__init__(*args, **kwargs)
+        user_choices = fields.getImageChoices(self.user)
+        self.fields['profile_image'] = forms.ChoiceField(
+            label=_("Profile image"),
+            required=False,
+            choices=user_choices,
+        )
 
 class RegistrationForm(UserUsernameForm, UserPasswordForm, UserBasicInfoForm):
     """

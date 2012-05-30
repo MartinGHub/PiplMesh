@@ -39,11 +39,12 @@ urlpatterns = patterns('',
     # Facebook
     url(r'^facebook/login/$', account_views.FacebookLoginView.as_view(), name='facebook_login'),
     url(r'^facebook/callback/$', account_views.FacebookCallbackView.as_view(), name='facebook_callback'),
-    url(r'^facebook/unlinkAccount/$', account_views.FacebookUnlinkView.as_view(), name='facebook_unlink'),
+    url(r'^facebook/unlink/$', account_views.FacebookUnlinkView.as_view(), name='facebook_unlink'),
 
     # Twitter
     url(r'^twitter/login/$', account_views.TwitterLoginView.as_view(), name='twitter_login'),
     url(r'^twitter/callback/$', account_views.TwitterCallbackView.as_view(), name='twitter_callback'),
+    url(r'^twitter/unlink/$', account_views.TwitterUnlinkView.as_view(), name='twitter_unlink'),
 
     # Profile, account
     url(r'^user/(?P<username>' + models.USERNAME_REGEX + ')/$', frontend_views.UserView.as_view(), name='user'),

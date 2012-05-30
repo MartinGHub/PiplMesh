@@ -168,3 +168,29 @@ def facebookLink(facebook_token=None, request=None):
     request.user.save()
 
     return None
+
+def twitterLink(twitter_token=None, request=None):
+    """
+    Method for linking account with Twitter.
+    """
+
+    # Retrieve data
+    twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)
+    twitter_auth.set_access_token(twitter_token.key, twitter_token.secret)
+    api = tweepy.API(twitter_auth)
+    twitter_user = api.me()
+
+    # Check if user with same twitter_id already exists and deletes him
+    try:
+        user = models.User.objects.get(twitter_id=twitter_user.id)
+        user.delete()
+    except Exception:
+        pass
+
+    # Save information to user
+    request.user.twitter_id = twitter_user.id
+    request.user.twitter_token_key = twitter_token.key
+    request.user.twitter_token_secret = twitter_token.secret
+    request.user.save()
+
+    return None

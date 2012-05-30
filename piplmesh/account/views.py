@@ -31,7 +31,7 @@ class FacebookLoginView(edit_views.FormView):
             'client_id': settings.FACEBOOK_APP_ID,
             'scope': settings.FACEBOOK_SCOPE,
             'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
-            }
+        }
         return "https://www.facebook.com/dialog/oauth?%(args)s" % {'args': urllib.urlencode(args)}
 
     def post(self, request, *args, **kwargs):
@@ -56,7 +56,7 @@ class FacebookCallbackView(generic_views.RedirectView):
                 if request.user.facebook_id:
                     messages.error(self.request, _("Your account is already linked with Facebook."))
                 else:
-                    user = backends.facebookLink(facebook_token=request.GET['code'], request=request)
+                    backends.facebookLink(facebook_token=request.GET['code'], request=request)
                     messages.success(request, _("You have successfully linked your account with Facebook."))
             else:
                 user = auth.authenticate(facebook_token=request.GET['code'], request=request)
@@ -73,7 +73,7 @@ class FacebookCallbackView(generic_views.RedirectView):
 
 class FacebookUnlinkView(generic_views.RedirectView):
     """
-    This view unlinks account with facebook.
+    This view unlinks account with Facebook.
     """
 
     permanent = False
@@ -92,18 +92,27 @@ class FacebookUnlinkView(generic_views.RedirectView):
             request.user.save()
         return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
 
-class TwitterLoginView(generic_views.RedirectView):
+class TwitterLoginView(edit_views.FormView):
     """
     This view authenticates the user via Twitter.
     """
 
-    permanent = False
+    template_name = 'user/password_check.html'
+    form_class = forms.UserCurrentPasswordForm
 
-    def get_redirect_url(self, **kwargs):
+    def get_form(self, form_class):
+        return form_class(self.request.user, **self.get_form_kwargs())
+
+    def get_success_url(self):
         twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET, self.request.build_absolute_uri(urlresolvers.reverse('twitter_callback')))
         redirect_url = twitter_auth.get_authorization_url(signin_with_twitter=True)
         self.request.session['request_token'] = twitter_auth.request_token
         return redirect_url
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return http.HttpResponseRedirect(self.get_success_url())
+        return super(TwitterLoginView, self).post(request, *args, **kwargs)
 
 class TwitterCallbackView(generic_views.RedirectView):
     """
@@ -122,17 +131,45 @@ class TwitterCallbackView(generic_views.RedirectView):
             assert request_token.key == request.GET['oauth_token']
             twitter_auth.set_request_token(request_token.key, request_token.secret)
             twitter_auth.get_access_token(verifier=oauth_verifier)
-            user = auth.authenticate(twitter_token=twitter_auth.access_token, request=request)
-            assert user.is_authenticated()
-            auth.login(request, user)
-            if not user.password:
-                messages.error(request, _("Before proceeding please set up your password."))
-                return shortcuts.redirect('password_create')
+            if request.user.is_authenticated():
+                if request.user.twitter_id:
+                    messages.error(self.request, _("Your account is already linked with Twitter."))
+                else:
+                    backends.twitterLink(twitter_token=twitter_auth.access_token, request=request)
+                    messages.success(request, _("You have successfully linked your account with Twitter."))
+            else:
+                user = auth.authenticate(twitter_token=twitter_auth.access_token, request=request)
+                assert user.is_authenticated()
+                auth.login(request, user)
+                if not user.password:
+                    messages.error(request, _("Before proceeding please set up your password."))
+                    return shortcuts.redirect('password_create')
             return super(TwitterCallbackView, self).get(request, *args, **kwargs)
         else:
             # TODO: Message user that they have not been logged in because they cancelled the twitter app
             # TODO: Use information provided from twitter as to why the login was not successful
             return super(TwitterCallbackView, self).get(request, *args, **kwargs)
+
+class TwitterUnlinkView(generic_views.RedirectView):
+    """
+    This view unlinks account with Twitter.
+    """
+
+    permanent = False
+    # TODO: Redirect users to the page they initially came from
+    url = settings.TWITTER_LOGIN_REDIRECT
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return shortcuts.redirect('login')
+        if not request.user.twitter_id:
+            messages.error(self.request, _("Your account is not yet linked with Twitter."))
+        else:
+            request.user.twitter_id = None
+            request.user.twitter_token_key = None
+            request.user.twitter_token_secret = None
+            request.user.save()
+        return super(TwitterUnlinkView, self).get(request, *args, **kwargs)
 
 def logout(request):
     """

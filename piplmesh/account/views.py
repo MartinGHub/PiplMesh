@@ -32,7 +32,7 @@ class FacebookLoginView(edit_views.FormView):
             'scope': settings.FACEBOOK_SCOPE,
             'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
         }
-        return "https://www.facebook.com/dialog/oauth?%(args)s" % {'args': urllib.urlencode(args)}
+        return 'https://www.facebook.com/dialog/oauth?%s' % urllib.urlencode(args)
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated():

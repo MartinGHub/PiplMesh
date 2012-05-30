@@ -1,4 +1,4 @@
-import json, urlparse, urllib
+import json, urllib, urlparse
 
 from django.conf import settings
 from django.core import urlresolvers
@@ -141,7 +141,7 @@ def getFacebookData(facebook_token, request):
     access_token = response['access_token'][-1]
 
     # Retrieve user's public profile information
-    data = urllib.urlopen('https://graph.facebook.com/me?access_token=%s' % access_token)
+    data = urllib.urlopen('https://graph.facebook.com/me?%s' % urllib.urlencode({'access_token': access_token}))
     fb = json.load(data)
 
     return fb, access_token

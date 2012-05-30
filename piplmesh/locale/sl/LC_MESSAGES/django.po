@@ -6,15 +6,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: piplmesh\n"
 "Report-Msgid-Bugs-To: https://github.com/wlanslovenija/PiplMesh\n"
-"POT-Creation-Date: 2012-05-17 19:57+0200\n"
-"PO-Revision-Date: 2012-05-18 12:29+0100\n"
+"POT-Creation-Date: 2012-05-30 21:10+0200\n"
+"PO-Revision-Date: 2012-05-30 21:29+0100\n"
 "Last-Translator: Martin Jakomin <martin.jakomin@gmail.com>\n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3)\n"
-"Language-Team: \n"
 
 #: .\settings.py:45
 msgid "Slovenian"
@@ -36,69 +36,74 @@ msgstr "ženska"
 msgid "Value is out of bounds."
 msgstr "Vrednost je izven meja."
 
-#: .\account\forms.py:40
+#: .\account\forms.py:13
 msgid "Username"
 msgstr "Uporabniško ime"
 
-#: .\account\forms.py:44
+#: .\account\forms.py:17
+#: .\account\models.py:33
 msgid "Minimal of 4 characters and maximum of 30. Letters, digits and @/./+/-/_ only."
 msgstr "Najmanj 4 in največ 30 znakov. Samo črke, številke in @/./+/-/_ ."
 
-#: .\account\forms.py:46
+#: .\account\forms.py:19
 msgid "This value may contain only letters, numbers and @/./+/-/_ characters."
 msgstr "To polje lahko vsebuje le črke, številke in znake @/./+/-/_ ."
 
-#: .\account\forms.py:57
+#: .\account\forms.py:30
 msgid "A user with that username already exists."
 msgstr "Uporabnik s tem uporabniškim imenom že obstaja."
 
-#: .\account\forms.py:66
+#: .\account\forms.py:39
 msgid "Password"
 msgstr "Geslo"
 
-#: .\account\forms.py:71
+#: .\account\forms.py:44
 msgid "Password (repeat)"
 msgstr "Geslo (ponovi)"
 
-#: .\account\forms.py:73
+#: .\account\forms.py:46
 msgid "Enter the same password as above, for verification."
 msgstr "V izogib napakam ponovno vnesi isto geslo kot zgoraj."
 
-#: .\account\forms.py:84
+#: .\account\forms.py:57
 msgid "The two password fields did not match."
 msgstr "Gesli se ne ujemata."
 
-#: .\account\forms.py:93
+#: .\account\forms.py:66
 msgid "Current password"
 msgstr "Trenutno geslo"
 
-#: .\account\forms.py:95
+#: .\account\forms.py:68
 msgid "Enter your current password, for verification."
 msgstr "Za potrditev vnesi trenutno geslo."
 
-#: .\account\forms.py:109
+#: .\account\forms.py:82
 msgid "Your current password was incorrect."
 msgstr "Vnešeno geslo je bilo nepravilno."
 
-#: .\account\forms.py:117
+#: .\account\forms.py:90
 msgid "First name"
 msgstr "Ime"
 
-#: .\account\forms.py:118
+#: .\account\forms.py:91
 msgid "Last name"
 msgstr "Priimek"
 
-#: .\account\forms.py:119
+#: .\account\forms.py:92
 msgid "E-mail"
 msgstr "E-mail"
 
-#: .\account\forms.py:121
+#: .\account\forms.py:94
 msgid "Gender"
 msgstr "Spol"
 
-#: .\account\forms.py:128
+#: .\account\forms.py:102
 msgid "Birth date"
 msgstr "Datum rojstva"
+
+#: .\account\models.py:32
+msgid "username"
+msgstr "Uporabniško ime"
 
 #: .\account\signals.py:11
 msgid "You have been successfully logged in."
@@ -108,47 +113,118 @@ msgstr "Prijava uspešna."
 msgid "You have been successfully logged out."
 msgstr "Odjava uspešna."
 
-#: .\account\views.py:90
+#: .\account\views.py:57
+msgid "Your account is already linked with Facebook."
+msgstr "Tvoj račun je že povezan s Facebook-om."
+
+#: .\account\views.py:60
+msgid "You have successfully linked your account with Facebook."
+msgstr "Uspešno si povezal svoj račun s Facebook-om."
+
+#: .\account\views.py:65
+#: .\account\views.py:145
+msgid "Before proceeding please set up your password."
+msgstr "Preden nadaljuješ si nastavi geslo."
+
+#: .\account\views.py:87
+msgid "Your account is not yet linked with Facebook."
+msgstr "Tvoj račun še ni povezan s Facebook-om."
+
+#: .\account\views.py:136
+msgid "Your account is already linked with Twitter."
+msgstr "Tvoj račun je že povezan s Twitter-jem."
+
+#: .\account\views.py:139
+msgid "You have successfully linked your account with Twitter."
+msgstr "Uspešno si povezal svoj račun s Twitter-jem."
+
+#: .\account\views.py:166
+msgid "Your account is not yet linked with Twitter."
+msgstr "Tvoj račun še ni povezan s Twitter-jem."
+
+#: .\account\views.py:212
 msgid "Registration has been successful."
 msgstr "Registracija je bila uspešna."
 
-#: .\account\views.py:115
+#: .\account\views.py:237
 msgid "Your account has been successfully updated."
 msgstr "Tvoj račun je bil uspešno posodobljen."
 
-#: .\account\views.py:146
+#: .\account\views.py:244
+msgid "Before proceeding to your account page, you must set up your password."
+msgstr "Preden nadaljuješ na nastavitve si moraš nastaviti geslo."
+
+#: .\account\views.py:271
+msgid "You have successfully set your password."
+msgstr "Uspešno si si nastavil geslo."
+
+#: .\account\views.py:278
+msgid "You already have password set."
+msgstr "Imaš že nastavljeno geslo."
+
+#: .\account\views.py:293
 msgid "Your password has been successfully changed."
 msgstr "Tvoje geslo je bilo uspešno posodobljeno."
 
 #: .\account\templates\user\account.html.py:5
 #: .\account\templates\user\account.html.py:10
 #: .\account\templates\user\password_change.html.py:10
+#: .\account\templates\user\password_check.html.py:10
 #: .\frontend\templates\user\user.html.py:11
 msgid "Account"
 msgstr "Račun"
 
 #: .\account\templates\user\account.html.py:9
 #: .\account\templates\user\password_change.html.py:9
+#: .\account\templates\user\password_check.html.py:9
 #: .\frontend\templates\user\user.html.py:10
 msgid "Profile"
 msgstr "Profil"
 
-#: .\account\templates\user\account.html.py:16
+#: .\account\templates\user\account.html.py:13
+#: .\account\templates\user\password_change.html.py:13
+#: .\account\templates\user\password_check.html.py:13
+#: .\account\templates\user\password_create.html.py:9
+msgid "Submit"
+msgstr "Pošlji"
+
+#: .\account\templates\user\account.html.py:18
 msgid "Change your password"
 msgstr "Spremeni svoje geslo"
 
+#: .\account\templates\user\account.html.py:20
+msgid "Link account with Facebook"
+msgstr "Poveži račun s Facebook-om"
+
+#: .\account\templates\user\account.html.py:22
+msgid "Unlink account from Facebook"
+msgstr "Razveži račun s Facebook-om."
+
+#: .\account\templates\user\account.html.py:25
+msgid "Link account with Twitter"
+msgstr "Poveži račun s Twitter-jem"
+
+#: .\account\templates\user\account.html.py:27
+msgid "Unlink account from Twitter"
+msgstr "Razveži račun s Twitter-jem."
+
 #: .\account\templates\user\login.html.py:5
-#: .\account\templates\user\login.html.py:17
-#: .\frontend\templates\header.html.py:49
+#: .\account\templates\user\login.html.py:12
+#: .\frontend\templates\header.html.py:45
 msgid "Login"
 msgstr "Prijavi se"
 
-#: .\account\templates\user\login.html.py:25
+#: .\account\templates\user\login.html.py:22
 msgid "Login with Facebook"
 msgstr "Facebook prijava"
 
-#: .\account\templates\user\login.html.py:30
-#: .\frontend\templates\header.html.py:50
+#: .\account\templates\user\login.html.py:28
+msgid "Login with Twitter"
+msgstr "Twitter prijava"
+
+#: .\account\templates\user\login.html.py:33
+#: .\account\templates\user\registration.html.py:9
+#: .\frontend\templates\header.html.py:46
 msgid "Register"
 msgstr "Registriraj se"
 
@@ -156,25 +232,39 @@ msgstr "Registriraj se"
 msgid "Change Password"
 msgstr "Spremeni geslo"
 
+#: .\account\templates\user\password_check.html.py:5
+msgid "Password Confirmation"
+msgstr "Geslo (ponovi)"
+
+#: .\account\templates\user\password_create.html.py:5
+msgid "Create Password"
+msgstr "Ustvari geslo"
+
 #: .\account\templates\user\registration.html.py:5
 msgid "Registration"
 msgstr "Registracija"
 
-#: .\frontend\templates\footer.html.py:5
+#: .\account\templates\user\user_image.html.py:3
+msgid "User image"
+msgstr "Uporabnikova slika"
+
+#: .\frontend\debug.py:6
+msgid "File"
+msgstr "Dokument"
+
+#: .\frontend\templates\footer.html.py:6
 msgid "node database"
 msgstr "baza točk"
 
-#: .\frontend\templates\footer.html.py:5
+#: .\frontend\templates\footer.html.py:6
 msgid "development"
 msgstr "razvoj"
 
-#: .\frontend\templates\footer.html.py:5
+#: .\frontend\templates\footer.html.py:6
 msgid "growing"
 msgstr "rast"
 
-#: .\frontend\templates\gravatar.html.py:2
-#: .\frontend\templates\header.html.py:33
-#: .\frontend\templates\user\user.html.py:16
+#: .\frontend\templates\gravatar.html.py:3
 msgid "User picture"
 msgstr "Slika uporabnika"
 
@@ -182,9 +272,13 @@ msgstr "Slika uporabnika"
 msgid "See your query results on "
 msgstr "Poglej zadetke na "
 
-#: .\frontend\templates\header.html.py:44
+#: .\frontend\templates\header.html.py:40
 msgid "Logout"
 msgstr "Odjava"
+
+#: .\frontend\templates\outside.html.py:11
+msgid "Send my current location"
+msgstr "Pošlji mojo trenutno lokacijo"
 
 #: .\frontend\templates\search.html.py:5
 msgid "Search"
@@ -194,38 +288,51 @@ msgstr "Išči"
 msgid "Results for:"
 msgstr "Rezultati za:"
 
-#: .\frontend\templates\form\form.html.py:10
+#: .\frontend\templates\userlist.html.py:4
+msgid "Show/Hide Users"
+msgstr "Pokaži/Skrij uporabnike"
+
+#: .\frontend\templates\userlist.html.py:4
+msgid "Online Users"
+msgstr "Prijavljeni uporabniki"
+
+#: .\frontend\templates\userlist.html.py:7
+msgid "Search users"
+msgstr "Išči med uporabniki"
+
+#: .\frontend\templates\form\form.html.py:30
 msgid "Required"
 msgstr "Obvezno"
 
-#: .\frontend\templates\form\form.html.py:21
-msgid "Submit"
-msgstr "Pošlji"
-
-#: .\frontend\templates\user\user.html.py:22
+#: .\frontend\templates\user\user.html.py:18
 msgid "Username:"
 msgstr "Uporabniško ime:"
 
-#: .\frontend\templates\user\user.html.py:23
+#: .\frontend\templates\user\user.html.py:19
 msgid "Name:"
 msgstr "Ime in priimek:"
 
-#: .\frontend\templates\user\user.html.py:24
+#: .\frontend\templates\user\user.html.py:20
 msgid "Gender:"
 msgstr "Spol:"
 
-#: .\frontend\templates\user\user.html.py:25
+#: .\frontend\templates\user\user.html.py:21
 msgid "Birthdate:"
 msgstr "Datum rojstva:"
 
-#: .\frontend\templates\user\user.html.py:26
+#: .\frontend\templates\user\user.html.py:22
 msgid "E-mail:"
 msgstr "E-mail:"
 
-#: .\frontend\templates\user\user.html.py:27
+#: .\frontend\templates\user\user.html.py:23
 msgid "Last login:"
 msgstr "Zadnja prijava:"
 
-#: .\frontend\templates\user\user.html.py:29
+#: .\frontend\templates\user\user.html.py:26
 msgid "Facebook link"
 msgstr "Facebook povezava"
+
+#: .\frontend\templates\user\user.html.py:29
+msgid "Twitter link"
+msgstr "Twitter povezava"
+

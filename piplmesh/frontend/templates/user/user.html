@@ -1,6 +1,6 @@
 {% extends "plain.html" %}
 
-{% load i18n facebook gravatar %}
+{% load i18n account %}
 
 {% block title %}{{ object.username }}{% endblock %}
 
@@ -12,11 +12,7 @@
         {% endif %}
     </div>
     <div id="picture" >
-        {% if object.facebook_id %}
-            <img src="{% facebook_picture object.facebook_id "large" %}" alt="{% trans "User picture" %}" />
-        {% else %}
-            {% gravatar object 200 %}
-        {% endif %}
+        IMAGE
     </div>
     <div id="profile">
         <p>{% trans "Username:" %} {{ object.username }}</p>
@@ -28,7 +24,8 @@
         <p>
             {% if object.facebook_id %}
                 <a href="{{ object.facebook_link }}"><img src="{{ STATIC_URL }}piplmesh/images/fb_logo.png" height="30" width="30" alt="{% trans "Facebook link" %}" /></a>
-            {% elif object.twitter_id %}
+            {% endif %}
+            {% if object.twitter_id %}
                 <a href="http://twitter.com/#!/{{ object.username }}"><img src="{{ STATIC_URL }}piplmesh/images/twitter_logo.png" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
             {% endif %}
         </p>

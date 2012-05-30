@@ -15,20 +15,29 @@ import tweepy
 
 from piplmesh.account import backends, forms, models
 
-class FacebookLoginView(generic_views.RedirectView):
+class FacebookLoginView(edit_views.FormView):
     """ 
     This view authenticates the user via Facebook.
     """
 
-    permanent = False
+    template_name = 'user/password_check.html'
+    form_class = forms.UserCurrentPasswordForm
 
-    def get_redirect_url(self, **kwargs):
+    def get_form(self, form_class):
+        return form_class(self.request.user, **self.get_form_kwargs())
+
+    def get_success_url(self):
         args = {
             'client_id': settings.FACEBOOK_APP_ID,
             'scope': settings.FACEBOOK_SCOPE,
             'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
-        }
+            }
         return "https://www.facebook.com/dialog/oauth?%(args)s" % {'args': urllib.urlencode(args)}
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return http.HttpResponseRedirect(self.get_success_url())
+        return super(FacebookLoginView, self).post(request, *args, **kwargs)
 
 class FacebookCallbackView(generic_views.RedirectView):
     """ 
@@ -42,59 +51,25 @@ class FacebookCallbackView(generic_views.RedirectView):
     def get(self, request, *args, **kwargs):
         if 'code' in request.GET:
             # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code'
-            user = auth.authenticate(facebook_token=request.GET['code'], request=request)
-            if user is None:
-                messages.error(request, _("Please register with another username and then link your account with Facebook."))
-                return shortcuts.redirect('registration')
-            auth.login(request, user)
-            if not user.password:
-                messages.error(request, _("Before proceeding please set up your password."))
-                return shortcuts.redirect('password_create')
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
-        else:
-            # TODO: Message user that they have not been logged in because they cancelled the facebook app
-            # TODO: Use information provided from facebook as to why the login was not successful
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
-
-class FacebookLinkView(generic_views.RedirectView):
-    """
-    This view authenticates the user via Facebook.
-    """
-
-    permanent = False
-
-    def get_redirect_url(self, **kwargs):
-        args = {
-            'client_id': settings.FACEBOOK_APP_ID,
-            'scope': settings.FACEBOOK_SCOPE,
-            'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_link_callback')),
-            }
-        return "https://www.facebook.com/dialog/oauth?%(args)s" % {'args': urllib.urlencode(args)}
-
-class FacebookLinkCallbackView(generic_views.RedirectView):
-    """
-    This view links account with facebook.
-    """
-
-    permanent = False
-    # TODO: Redirect users to the page they initially came from
-    url = settings.FACEBOOK_LOGIN_REDIRECT
-
-    def get(self, request, *args, **kwargs):
-        if 'code' in request.GET:
-            # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code'
-            if not request.user.is_authenticated():
-                return shortcuts.redirect('login')
-            if request.user.facebook_id:
-                messages.error(self.request, _("Your account is already linked with Facebook."))
+            # TODO: Check if 'client_id' is same as ours
+            if request.user.is_authenticated():
+                if request.user.facebook_id:
+                    messages.error(self.request, _("Your account is already linked with Facebook."))
+                else:
+                    user = backends.facebookLink(facebook_token=request.GET['code'], request=request)
+                    messages.success(request, _("You have successfully linked your account with Facebook."))
             else:
-                user = backends.facebookLink(facebook_token=request.GET['code'], request=request)
-                messages.success(request, _("You have successfully linked your account with Facebook."))
-            return super(FacebookLinkCallbackView, self).get(request, *args, **kwargs)
+                user = auth.authenticate(facebook_token=request.GET['code'], request=request)
+                auth.login(request, user)
+                if not user.password:
+                    messages.error(request, _("Before proceeding please set up your password."))
+                    return shortcuts.redirect('password_create')
+            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
         else:
             # TODO: Message user that they have not been logged in because they cancelled the facebook app
             # TODO: Use information provided from facebook as to why the login was not successful
-            return super(FacebookLinkCallbackView, self).get(request, *args, **kwargs)
+            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+
 
 class FacebookUnlinkView(generic_views.RedirectView):
     """
@@ -148,9 +123,6 @@ class TwitterCallbackView(generic_views.RedirectView):
             twitter_auth.set_request_token(request_token.key, request_token.secret)
             twitter_auth.get_access_token(verifier=oauth_verifier)
             user = auth.authenticate(twitter_token=twitter_auth.access_token, request=request)
-            if user is None:
-                messages.error(request, _("Please register with another username and then link your account with Twitter."))
-                return shortcuts.redirect('registration')
             assert user.is_authenticated()
             auth.login(request, user)
             if not user.password:
@@ -191,10 +163,9 @@ class RegistrationView(edit_views.FormView):
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
             email=form.cleaned_data['email'],
+            gender=form.cleaned_data['gender'] or None,
             birthdate=form.cleaned_data['birthdate'],
         )
-        if form.cleaned_data['gender']:
-            new_user.gender = form.cleaned_data['gender']
         new_user.set_password(form.cleaned_data['password2'])
         new_user.save()
         # We update user with authentication data
@@ -223,7 +194,7 @@ class AccountChangeView(edit_views.FormView):
         user.first_name=form.cleaned_data['first_name']
         user.last_name=form.cleaned_data['last_name']
         user.email=form.cleaned_data['email']
-        user.gender=form.cleaned_data['gender']
+        user.gender=form.cleaned_data['gender'] or None
         user.birthdate=form.cleaned_data['birthdate']
         user.save()
         messages.success(self.request, _("Your account has been successfully updated."))

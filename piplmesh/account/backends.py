@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core import urlresolvers
 
 from mongoengine.django import auth
+from mongoengine.queryset import OperationError
 
 import tweepy
 
@@ -46,27 +47,41 @@ class FacebookBackend(MongoEngineBackend):
         data is saved.
         """
 
-        fb, access_token = getFBData(facebook_token, request, 'facebook_callback')
+        fb, access_token = getFacebookData(facebook_token, request)
         # TODO: Check if id and other fields are returned
         # TODO: Move user retrieval/creation to User document/manager
         # TODO: get_or_create implementation has in fact a race condition, is this a problem?
-        try:
-            user, created = self.user_class.objects.get_or_create(
-                facebook_id=fb.get('id'),
-                defaults={
-                    'username': fb.get('username', fb.get('first_name') + fb.get('last_name')),
-                    'first_name': fb.get('first_name'),
-                    'last_name': fb.get('last_name'),
-                    'email': fb.get('email'),
-                    'gender': fb.get('gender'),
-                    'facebook_link': fb.get('link'),
-                    }
-            )
-            user.facebook_token = access_token
-            user.save()
-            return user
-        except Exception:
-            return None
+
+        username = fb.get('username', fb.get('first_name') + fb.get('last_name'))
+        i = 1
+        while True:
+            try:
+                user, created = self.user_class.objects.get_or_create(
+                    facebook_id=fb.get('id'),
+                    defaults={
+                        'username': username,
+                        'first_name': fb.get('first_name'),
+                        'last_name': fb.get('last_name'),
+                        'email': fb.get('email'),
+                        'gender': fb.get('gender'),
+                        'facebook_link': fb.get('link'),
+                        }
+                )
+                break
+            except OperationError, e:
+                msg = str(e)
+                if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
+                    username = fb.get('username', fb.get('first_name') + fb.get('last_name'))
+                    username += str(i)
+                    i+=1
+                    continue
+                else:
+                    raise
+
+        user.facebook_token = access_token
+        user.save()
+
+        return user
 
 class TwitterBackend(MongoEngineBackend):
     """
@@ -79,23 +94,36 @@ class TwitterBackend(MongoEngineBackend):
         api = tweepy.API(twitter_auth)
         twitter_user = api.me()
 
-        try:
-            user, created = self.user_class.objects.get_or_create(
-                twitter_id = twitter_user.id,
-                defaults = {
-                    'username': twitter_user.screen_name,
-                    'first_name': twitter_user.name,
-                    # TODO: Get email via twitter
-                }
-            )
-            user.twitter_token_key = twitter_token.key
-            user.twitter_token_secret = twitter_token.secret
-            user.save()
-            return user
-        except Exception:
-            return None
+        username = twitter_user.screen_name
+        i = 1
+        while True:
+            try:
+                user, created = self.user_class.objects.get_or_create(
+                    twitter_id = twitter_user.id,
+                    defaults = {
+                        'username': username,
+                        'first_name': twitter_user.name,
+                        # TODO: Get email via twitter
+                    }
+                )
+                break
+            except OperationError, e:
+                msg = str(e)
+                if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
+                    username = twitter_user.screen_name
+                    username += str(i)
+                    i+=1
+                    continue
+                else:
+                    raise
 
-def getFBData(facebook_token, request, redirect):
+        user.twitter_token_key = twitter_token.key
+        user.twitter_token_secret = twitter_token.secret
+        user.save()
+
+        return user
+
+def getFacebookData(facebook_token, request):
     """
     This method gets data from Facebook and returns it.
     """
@@ -103,7 +131,7 @@ def getFBData(facebook_token, request, redirect):
     args = {
         'client_id': settings.FACEBOOK_APP_ID,
         'client_secret': settings.FACEBOOK_APP_SECRET,
-        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse(redirect)),
+        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
         'code': facebook_token,
         }
 
@@ -123,16 +151,20 @@ def facebookLink(facebook_token=None, request=None):
     Method for linking account with Facebook.
     """
 
-    fb, access_token = getFBData(facebook_token, request, 'facebook_link_callback')
+    # Retrieve data
+    fb, access_token = getFacebookData(facebook_token, request)
 
+    # Check if user with same facebook_id already exists and deletes him
     try:
         user = models.User.objects.get(facebook_id=fb.get('id'))
         user.delete()
     except Exception:
         pass
 
+    # Save information to user
     request.user.facebook_id = fb.get('id')
     request.user.facebook_token = access_token
     request.user.facebook_link = fb.get('link')
     request.user.save()
+
     return None

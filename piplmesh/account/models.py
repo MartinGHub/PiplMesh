@@ -56,7 +56,7 @@ class User(auth.User):
             return tweepy.API(twitter_auth).me().profile_image_url
         
         elif self.facebook_id:
-            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.username)
+            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_id)
         
         else:
             default_url = request.build_absolute_uri(staticfiles_storage.url(settings.DEFAULT_USER_IMAGE))

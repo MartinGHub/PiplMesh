@@ -17,16 +17,14 @@
     <div id="password_change">
         <p><a href="{% url password_change %}">{% trans "Change your password" %}</a></p>
         {% if not user.facebook_id %}
-            <p><a href="{% url facebook_link %}">{% trans "Link account with Facebook" %}</a></p>
-        {% endif %}
-        {% if user.facebook_id %}
-            <p><a href="{% url facebook_unlink %}">{% trans "Unlink account with Facebook" %}</a></p>
+            <p><a href="{% url facebook_login %}">{% trans "Link account with Facebook" %}</a></p>
+        {% else %}
+            <p><a href="{% url facebook_unlink %}">{% trans "Unlink account from Facebook" %}</a></p>
         {% endif %}
         {% if not user.twitter_id %}
             <p><a href="{% url home %}">{% trans "Link account with Twitter" %}</a></p>
-        {% endif %}
-        {% if user.twitter_id %}
-            <p><a href="{% url home %}">{% trans "Unlink account with Twitter" %}</a></p>
+        {% else %}
+            <p><a href="{% url home %}">{% trans "Unlink account from Twitter" %}</a></p>
         {% endif %}
     </div>
 {% endblock %}

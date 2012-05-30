@@ -10,5 +10,5 @@ django-pushserver==0.1.8
 pymongo==2.1.1
 tweepy==1.9
 django-tastypie-mongoengine==0.2.1
--e git+https://github.com/mitar/django-mongodbforms.git@01201c7b14127a3cb2cb027965320ed8ec499a4e#egg=mongodbforms-dev
--e git+https://github.com/mitar/django-mongogeneric.git@0d9d320398865d04e5c9d72b47543ecf68471813#egg=mongogeneric-dev
+-e git+https://github.com/jschrewe/django-mongodbforms.git@ed588dbcc92e719d1a68121a772377fe4dd87ce6#egg=mongodbforms-dev
+-e git+https://github.com/jschrewe/django-mongogeneric.git@1ce1d4c35da58627537e86cf650c8efd747f5ea6#egg=mongogeneric-dev

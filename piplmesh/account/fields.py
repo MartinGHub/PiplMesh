@@ -93,7 +93,7 @@ class ProfileImageField(mongoengine.StringField):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('max_length', 10)
         kwargs.setdefault('choices', DEFAULT_IMAGE_CHOICES)
-        kwargs.setdefault('default', DEFAULT_IMAGE_CHOICES[1][0])
+        kwargs.setdefault('default', DEFAULT_IMAGE_CHOICES[0][0])
 
         super(ProfileImageField, self).__init__(*args, **kwargs)
 

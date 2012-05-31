@@ -70,7 +70,7 @@ class User(auth.User):
             return tweepy.API(twitter_auth).me().profile_image_url
 
         elif self.profile_image == 'facebook':
-            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.username)
+            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_id)
 
         else:
             request = client.RequestFactory(**settings.DEFAULT_REQUEST).request()

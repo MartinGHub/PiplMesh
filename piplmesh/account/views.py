@@ -196,16 +196,15 @@ class RegistrationView(edit_views.FormView):
     form_class = forms.RegistrationForm
 
     def form_valid(self, form):
-        new_user = models.User(
-            username=form.cleaned_data['username'],
-            first_name=form.cleaned_data['first_name'],
-            last_name=form.cleaned_data['last_name'],
-            email=form.cleaned_data['email'],
-            gender=form.cleaned_data['gender'] or None,
-            birthdate=form.cleaned_data['birthdate'],
-        )
-        new_user.set_password(form.cleaned_data['password2'])
-        new_user.save()
+        user = self.request.user
+        user.username = form.cleaned_data['username']
+        user.first_name = form.cleaned_data['first_name']
+        user.last_name = form.cleaned_data['last_name']
+        user.email = form.cleaned_data['email']
+        user.gender = form.cleaned_data['gender'] or None
+        user.birthdate = form.cleaned_data['birthdate']
+        user.set_password(form.cleaned_data['password2'])
+        user.save()
         # We update user with authentication data
         newuser = auth.authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password2'])
         assert newuser is not None, form.cleaned_data['username']
@@ -214,8 +213,7 @@ class RegistrationView(edit_views.FormView):
         return super(RegistrationView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        # TODO: Is this really the correct check? What is user is logged through third-party authentication, but still wants to register with us?
-        if request.user.is_authenticated():
+        if not request.user.is_anonymous():
             return simple.redirect_to(request, url=self.get_success_url(), permanent=False)
         return super(RegistrationView, self).dispatch(request, *args, **kwargs)
 
@@ -241,9 +239,6 @@ class AccountChangeView(edit_views.FormView):
         return super(AccountChangeView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        # TODO: With lazy user support, we want users to be able to change their account even if not authenticated
-        if not request.user.is_authenticated():
-            return shortcuts.redirect('login')
         if not request.user.password:
             messages.error(request, _("Before proceeding to your account page, you must set up your password."))
             return shortcuts.redirect('password_create')
@@ -277,8 +272,6 @@ class PasswordCreateView(edit_views.FormView):
         return super(PasswordCreateView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
-            return shortcuts.redirect('login')
         if request.user.password:
             messages.error(request, _("You already have password set."))
             return shortcuts.redirect('home')

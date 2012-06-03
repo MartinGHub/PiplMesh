@@ -215,4 +215,3 @@ class LazyUserBackend(MongoEngineBackend):
                 raise
 
         return user
-

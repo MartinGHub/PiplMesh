@@ -26,7 +26,7 @@
                 <a href="{{ object.facebook_link }}"><img src="{{ STATIC_URL }}piplmesh/images/fb_logo.png" height="30" width="30" alt="{% trans "Facebook link" %}" /></a>
             {% endif %}
             {% if object.twitter_id %}
-                <a href="http://twitter.com/#!/{{ object.username }}"><img src="{{ STATIC_URL }}piplmesh/images/twitter_logo.png" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
+                <a href="{{ object.twitter_link }}"><img src="{{ STATIC_URL }}piplmesh/images/twitter_logo.png" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
             {% endif %}
         </p>
         <br/>

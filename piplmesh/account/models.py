@@ -49,6 +49,7 @@ class User(auth.User):
     facebook_link = mongoengine.StringField(max_length=100)
 
     twitter_id = mongoengine.IntField()
+    twitter_link = mongoengine.StringField(max_length=100)
     twitter_token_key = mongoengine.StringField(max_length=150)
     twitter_token_secret = mongoengine.StringField(max_length=150)
 

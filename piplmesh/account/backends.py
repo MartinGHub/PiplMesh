@@ -87,7 +87,7 @@ class FacebookBackend(MongoEngineBackend):
                     continue
                 else:
                     raise
-                
+
         return user
 
 class TwitterBackend(MongoEngineBackend):
@@ -119,6 +119,7 @@ class TwitterBackend(MongoEngineBackend):
                     user.first_name = twitter_user.name
                     user.twitter_token_key = twitter_token.key
                     user.twitter_token_secret = twitter_token.secret
+                    user.twitter_link = "http://twitter.com/#!/" + twitter_user.screen_name
                     user.save()
                     break
             except OperationError, e:
@@ -201,6 +202,7 @@ def twitterLink(twitter_token=None, request=None):
     request.user.twitter_id = twitter_user.id
     request.user.twitter_token_key = twitter_token.key
     request.user.twitter_token_secret = twitter_token.secret
+    request.user.twitter_link = "http://twitter.com/#!/" + twitter_user.screen_name
     request.user.save()
 
     return None

@@ -63,6 +63,8 @@ class FacebookBackend(MongoEngineBackend):
             try:
                 try:
                     user = self.user_class.objects.get(facebook_id=fb.get('id'))
+                    user.facebook_token = access_token
+                    user.save()
                     break
                 except DoesNotExist:
                     user = request.user
@@ -73,6 +75,8 @@ class FacebookBackend(MongoEngineBackend):
                     user.email = fb.get('email')
                     user.gender = fb.get('gender')
                     user.facebook_link = fb.get('link')
+                    user.facebook_token = access_token
+                    user.save()
                     break
             except OperationError, e:
                 msg = str(e)
@@ -83,10 +87,7 @@ class FacebookBackend(MongoEngineBackend):
                     continue
                 else:
                     raise
-
-        user.facebook_token = access_token
-        user.save()
-
+                
         return user
 
 class TwitterBackend(MongoEngineBackend):
@@ -107,12 +108,18 @@ class TwitterBackend(MongoEngineBackend):
             try:
                 try:
                     user = self.user_class.objects.get(twitter_id=twitter_user.id)
+                    user.twitter_token_key = twitter_token.key
+                    user.twitter_token_secret = twitter_token.secret
+                    user.save()
                     break
                 except DoesNotExist:
                     user = request.user
                     user.twitter_id = twitter_user.id
                     user.username = username
                     user.first_name = twitter_user.name
+                    user.twitter_token_key = twitter_token.key
+                    user.twitter_token_secret = twitter_token.secret
+                    user.save()
                     break
             except OperationError, e:
                 msg = str(e)
@@ -123,10 +130,6 @@ class TwitterBackend(MongoEngineBackend):
                     continue
                 else:
                     raise
-
-        user.twitter_token_key = twitter_token.key
-        user.twitter_token_secret = twitter_token.secret
-        user.save()
 
         return user
 

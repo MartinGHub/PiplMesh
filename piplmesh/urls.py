@@ -46,6 +46,10 @@ urlpatterns = patterns('',
     url(r'^twitter/callback/$', account_views.TwitterCallbackView.as_view(), name='twitter_callback'),
     url(r'^twitter/unlink/$', account_views.TwitterUnlinkView.as_view(), name='twitter_unlink'),
 
+    # Google
+    url(r'^google/login/$', account_views.GoogleLoginView.as_view(), name='google_login'),
+    url(r'^google/callback/$', account_views.GoogleCallbackView.as_view(), name='google_callback'),
+
     # Profile, account
     url(r'^user/(?P<username>' + models.USERNAME_REGEX + ')/$', frontend_views.UserView.as_view(), name='profile'),
     url(r'^account/$', account_views.AccountChangeView.as_view(), name='account'),

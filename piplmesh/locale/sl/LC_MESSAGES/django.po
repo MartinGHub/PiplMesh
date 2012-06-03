@@ -196,7 +196,7 @@ msgstr "Poveži račun s Facebook-om"
 
 #: .\account\templates\user\account.html.py:22
 msgid "Unlink account from Facebook"
-msgstr "Razveži račun s Facebook-om."
+msgstr "Razveži račun s Facebook-om"
 
 #: .\account\templates\user\account.html.py:25
 msgid "Link account with Twitter"
@@ -204,7 +204,7 @@ msgstr "Poveži račun s Twitter-jem"
 
 #: .\account\templates\user\account.html.py:27
 msgid "Unlink account from Twitter"
-msgstr "Razveži račun s Twitter-jem."
+msgstr "Razveži račun s Twitter-jem"
 
 #: .\account\templates\user\login.html.py:5
 #: .\account\templates\user\login.html.py:12
@@ -231,7 +231,7 @@ msgid "Change Password"
 msgstr "Spremeni geslo"
 
 #: .\account\templates\user\password_check.html.py:5
-msgid "Password Confirmation"
+msgid "Password (repeat)"
 msgstr "Geslo (ponovi)"
 
 #: .\account\templates\user\password_create.html.py:5
@@ -307,8 +307,8 @@ msgid "Show/Hide Users"
 msgstr "Pokaži/Skrij uporabnike"
 
 #: .\frontend\templates\userlist.html.py:4
-msgid "Online Users"
-msgstr "Prijavljeni uporabniki"
+msgid "Networked users"
+msgstr "Omreženi uporabniki"
 
 #: .\frontend\templates\userlist.html.py:7
 msgid "Search users"

@@ -250,7 +250,7 @@ class RegistrationView(edit_views.FormView):
         return super(RegistrationView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_anonymous():
+        if request.user.is_authenticated():
             return simple.redirect_to(request, url=self.get_success_url(), permanent=False)
         return super(RegistrationView, self).dispatch(request, *args, **kwargs)
 

@@ -49,7 +49,7 @@ class User(auth.User):
     facebook_link = mongoengine.StringField(max_length=100)
 
     twitter_id = mongoengine.IntField()
-    twitter_link = mongoengine.StringField(max_length=100)
+    twitter_name = mongoengine.StringField(max_length=100)
     twitter_token_key = mongoengine.StringField(max_length=150)
     twitter_token_secret = mongoengine.StringField(max_length=150)
     twitter_picture_url = mongoengine.StringField(max_length=150)
@@ -62,7 +62,6 @@ class User(auth.User):
     connections = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Connection))
     connection_last_unsubscribe = mongoengine.DateTimeField()
     is_online = mongoengine.BooleanField(default=False)
-
 
     @models.permalink
     def get_absolute_url(self):
@@ -92,6 +91,9 @@ class User(auth.User):
 
     def email_user(self, subject, message, from_email=None):
         mail.send_mail(subject, message, from_email, [self.email])
+
+    def get_twitter_link(self):
+        return 'http://twitter.com/#!/%s' % self.twitter_name
 
     def get_image_url(self):
         # TODO: Save images after each login, so you don't have to contact facebook or twitter on each request

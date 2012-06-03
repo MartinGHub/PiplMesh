@@ -14,7 +14,7 @@ DEFAULT_IMAGE_CHOICES = (
     ('gravatar', _("Gravatar")),
     ('twitter', _("Twitter")),
     ('facebook', _("Facebook")),
-    )
+)
 
 ERROR_MESSAGES = {
     'bounds': _("Value is out of bounds."),

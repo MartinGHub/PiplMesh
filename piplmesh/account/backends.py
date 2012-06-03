@@ -6,7 +6,6 @@ from django.utils import crypto
 
 from mongoengine import queryset
 from mongoengine.django import auth
-from mongoengine.queryset import DoesNotExist, OperationError
 
 import tweepy
 
@@ -51,12 +50,12 @@ class FacebookBackend(MongoEngineBackend):
         data is saved.
         """
 
-        fb, access_token = getFacebookData(facebook_token, request)
+        fb, access_token = get_facebook_user_profile_data(facebook_token, request)
         # TODO: Check if id and other fields are returned
         # TODO: Move user retrieval/creation to User document/manager
         # TODO: get_or_create implementation has in fact a race condition, is this a problem?
 
-        username = fb.get('username', fb.get('first_name') + fb.get('last_name'))
+        username = fb.get('username', fb.get('first_name', '') + fb.get('last_name', '')) or None
         i = 1
         user = ""
         while True:
@@ -66,7 +65,7 @@ class FacebookBackend(MongoEngineBackend):
                     user.facebook_token = access_token
                     user.save()
                     break
-                except DoesNotExist:
+                except queryset.DoesNotExist:
                     user = request.user
                     user.facebook_id = fb.get('id')
                     user.username = username
@@ -78,10 +77,10 @@ class FacebookBackend(MongoEngineBackend):
                     user.facebook_token = access_token
                     user.save()
                     break
-            except OperationError, e:
+            except queryset.OperationError, e:
                 msg = str(e)
                 if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
-                    username = fb.get('username', fb.get('first_name') + fb.get('last_name'))
+                    username = fb.get('username', fb.get('first_name', '') + fb.get('last_name', '')) or None
                     username += str(i)
                     i+=1
                     continue
@@ -149,17 +148,18 @@ class TwitterBackend(MongoEngineBackend):
                     user.twitter_token_secret = twitter_token.secret
                     user.save()
                     break
-                except DoesNotExist:
+                except queryset.DoesNotExist:
                     user = request.user
                     user.twitter_id = twitter_user.id
                     user.username = username
                     user.first_name = twitter_user.name
                     user.twitter_token_key = twitter_token.key
                     user.twitter_token_secret = twitter_token.secret
-                    user.twitter_link = "http://twitter.com/#!/" + twitter_user.screen_name
+                    user.twitter_name = twitter_user.screen_name
+                    user.twitter_url = twitter_user.url
                     user.save()
                     break
-            except OperationError, e:
+            except queryset.OperationError, e:
                 msg = str(e)
                 if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
                     username = twitter_user.screen_name
@@ -171,7 +171,7 @@ class TwitterBackend(MongoEngineBackend):
 
         return user
 
-def getFacebookData(facebook_token, request):
+def get_facebook_user_profile_data(facebook_token, request):
     """
     This method gets data from Facebook and returns it.
     """
@@ -200,13 +200,13 @@ def facebookLink(facebook_token=None, request=None):
     """
 
     # Retrieve data
-    fb, access_token = getFacebookData(facebook_token, request)
+    fb, access_token = get_facebook_user_profile_data(facebook_token, request)
 
     # Check if user with same facebook_id already exists and deletes him
     try:
         user = models.User.objects.get(facebook_id=fb.get('id'))
         user.delete()
-    except DoesNotExist:
+    except queryset.DoesNotExist:
         pass
 
     # Save information to user
@@ -232,14 +232,14 @@ def twitterLink(twitter_token=None, request=None):
     try:
         user = models.User.objects.get(twitter_id=twitter_user.id)
         user.delete()
-    except DoesNotExist:
+    except queryset.DoesNotExist:
         pass
 
     # Save information to user
     request.user.twitter_id = twitter_user.id
     request.user.twitter_token_key = twitter_token.key
     request.user.twitter_token_secret = twitter_token.secret
-    request.user.twitter_link = "http://twitter.com/#!/" + twitter_user.screen_name
+    request.user.twitter_name = twitter_user.screen_name
     request.user.save()
 
     return None

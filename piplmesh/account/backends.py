@@ -58,20 +58,22 @@ class FacebookBackend(MongoEngineBackend):
 
         username = fb.get('username', fb.get('first_name') + fb.get('last_name'))
         i = 1
+        user = ""
         while True:
             try:
-                user, created = self.user_class.objects.get_or_create(
-                    facebook_id=fb.get('id'),
-                    defaults={
-                        'username': username,
-                        'first_name': fb.get('first_name'),
-                        'last_name': fb.get('last_name'),
-                        'email': fb.get('email'),
-                        'gender': fb.get('gender'),
-                        'facebook_link': fb.get('link'),
-                        }
-                )
-                break
+                try:
+                    user = self.user_class.objects.get(facebook_id=fb.get('id'))
+                    break
+                except DoesNotExist:
+                    user = request.user
+                    user.facebook_id = fb.get('id')
+                    user.username = username
+                    user.first_name = fb.get('first_name')
+                    user.last_name = fb.get('last_name')
+                    user.email = fb.get('email')
+                    user.gender = fb.get('gender')
+                    user.facebook_link = fb.get('link')
+                    break
             except OperationError, e:
                 msg = str(e)
                 if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
@@ -100,17 +102,18 @@ class TwitterBackend(MongoEngineBackend):
 
         username = twitter_user.screen_name
         i = 1
+        user = ""
         while True:
             try:
-                user, created = self.user_class.objects.get_or_create(
-                    twitter_id = twitter_user.id,
-                    defaults = {
-                        'username': username,
-                        'first_name': twitter_user.name,
-                        # TODO: Get email via twitter
-                    }
-                )
-                break
+                try:
+                    user = self.user_class.objects.get(twitter_id=twitter_user.id)
+                    break
+                except DoesNotExist:
+                    user = request.user
+                    user.twitter_id = twitter_user.id
+                    user.username = username
+                    user.first_name = twitter_user.name
+                    break
             except OperationError, e:
                 msg = str(e)
                 if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:

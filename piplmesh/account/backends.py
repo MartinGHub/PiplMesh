@@ -156,7 +156,6 @@ class TwitterBackend(MongoEngineBackend):
                     user.twitter_token_key = twitter_token.key
                     user.twitter_token_secret = twitter_token.secret
                     user.twitter_name = twitter_user.screen_name
-                    user.twitter_url = twitter_user.url
                     user.save()
                     break
             except queryset.OperationError, e:

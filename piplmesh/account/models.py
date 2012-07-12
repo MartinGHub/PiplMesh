@@ -28,6 +28,10 @@ class Connection(mongoengine.EmbeddedDocument):
     http_if_modified_since = mongoengine.StringField()
     channel_id = mongoengine.StringField()
 
+class TwitterAccessToken(mongoengine.EmbeddedDocument):
+    key = mongoengine.StringField(max_length=150)
+    secret = mongoengine.StringField(max_length=150)
+
 class User(auth.User):
     username = mongoengine.StringField(
         max_length=30,
@@ -37,27 +41,27 @@ class User(auth.User):
         verbose_name=_("username"),
         help_text=_("Minimal of 4 characters and maximum of 30. Letters, digits and @/./+/-/_ only."),
     )
+    lazyuser_username = mongoengine.BooleanField(default=True)
 
     birthdate = fields.LimitedDateTimeField(upper_limit=upper_birthdate_limit, lower_limit=lower_birthdate_limit)
     gender = fields.GenderField()
     language = fields.LanguageField()
 
+
     profile_image = fields.ProfileImageField()
 
-    facebook_id = mongoengine.IntField()
-    facebook_token = mongoengine.StringField(max_length=150)
-    facebook_link = mongoengine.StringField(max_length=100)
+    facebook_access_token = mongoengine.StringField(max_length=150)
+    facebook_profile_data = mongoengine.DictField()
 
-    twitter_id = mongoengine.IntField()
+    twitter_access_token = mongoengine.EmbeddedDocumentField(TwitterAccessToken)
+    twitter_profile_data = mongoengine.DictField()
     twitter_name = mongoengine.StringField(max_length=100)
-    twitter_token_key = mongoengine.StringField(max_length=150)
-    twitter_token_secret = mongoengine.StringField(max_length=150)
-    twitter_picture_url = mongoengine.StringField(max_length=150)
 
-    google_id = mongoengine.StringField(max_length=30)
-    google_token = mongoengine.StringField(max_length=150)
-    google_link = mongoengine.StringField(max_length=100)
-    google_picture_url = mongoengine.StringField(max_length=150)
+    google_access_token = mongoengine.StringField(max_length=150)
+    google_profile_data = mongoengine.DictField()
+
+    foursquare_access_token = mongoengine.StringField(max_length=150)
+    foursquare_profile_data = mongoengine.DictField()
 
     connections = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Connection))
     connection_last_unsubscribe = mongoengine.DateTimeField()
@@ -74,7 +78,8 @@ class User(auth.User):
         return not self.is_authenticated()
 
     def is_authenticated(self):
-        return self.is_active and (self.has_usable_password() or self.facebook_id is not None or self.twitter_id is not None or self.google_id is not None)
+        # TODO: Check if *_data fields are really false if not linked with third-party authentication
+        return self.has_usable_password() or self.facebook_profile_data or self.twitter_profile_data or self.google_profile_data or self.foursquare_profile_data
 
     def check_password(self, raw_password):
         def setter(raw_password):
@@ -96,16 +101,20 @@ class User(auth.User):
         return 'http://twitter.com/#!/%s' % self.twitter_name
 
     def get_image_url(self):
+
         # TODO: Save images after each login, so you don't have to contact facebook or twitter on each request
 
-        if self.profile_image == 'twitter':
-            return self.twitter_picture_url
+        if self.profile_image == 'twitter' and self.twitter_profile_data and 'profile_image_url' in self.twitter_profile_data:
+            return self.twitter_profile_data['profile_image_url']
 
         elif self.profile_image == 'facebook':
             return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_id)
 
-        elif self.profile_image == 'google':
-            return self.google_picture_url
+        elif self.profile_image == 'foursquare' and self.foursquare_profile_data and 'photo' in self.foursquare_profile_data:
+            return self.foursquare_profile_data['photo']
+
+        elif self.profile_image == 'google' and self.google_profile_data and 'picture' in self.google_profile_data:
+            return self.google_profile_data['picture']
 
         elif self.email:
             request = client.RequestFactory(**settings.DEFAULT_REQUEST).request()
@@ -130,14 +139,13 @@ class User(auth.User):
         email = auth_models.UserManager.normalize_email(email)
         user = cls(
             username=username,
+            email=email or None,
             is_staff=False,
             is_active=True,
             is_superuser=False,
             last_login=now,
             date_joined=now,
         )
-        if email:
-            user.email = email
         user.set_password(password)
         user.save()
         return user

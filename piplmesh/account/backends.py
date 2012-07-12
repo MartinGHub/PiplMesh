@@ -37,6 +37,13 @@ class MongoEngineBackend(auth.MongoEngineBackend):
     def user_class(self):
         return models.User
 
+
+    def generateUsername(self,username):
+        username
+
+
+        return username
+
 class FacebookBackend(MongoEngineBackend):
     """
     Facebook authentication.
@@ -58,14 +65,17 @@ class FacebookBackend(MongoEngineBackend):
             user = request.user
             # TODO: Is it OK to override Facebook link if it already exist with some other Facebook user?
 
-        if request.user.facebook_profile_data.get('id') != facebook_profile_data.get('id'):
+        """if request.user.facebook_profile_data.get('id') != facebook_profile_data.get('id'):
 
             user.facebook_access_token = facebook_access_token
-            user.facebook_profile_data = facebook_profile_data
+            user.facebook_profile_data = facebook_profile_data"""
+
+        user.facebook_access_token = facebook_access_token
+        user.facebook_profile_data = facebook_profile_data
 
         if user.lazyuser_username and facebook_profile_data.get('username'):
             # TODO: Does Facebook have same restrictions on username content as we do?
-            user.username = facebook_profile_data.get('username')
+            user.username = self.generateUsername(facebook_profile_data.get('username'))
             user.lazyuser_username = False
         if user.first_name is None:
             user.first_name = facebook_profile_data.get('first_name') or None
@@ -80,6 +90,7 @@ class FacebookBackend(MongoEngineBackend):
             user.gender = facebook_profile_data.get('gender') or None
 
         user.save()
+        return user
 
 
 
@@ -230,72 +241,7 @@ class TwitterBackend(MongoEngineBackend):
 
         return user
 
-"""def get_facebook_user_profile_data(facebook_token, request):
 
-
-    args = {
-        'client_id': settings.FACEBOOK_APP_ID,
-        'client_secret': settings.FACEBOOK_APP_SECRET,
-        'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
-        'code': facebook_token,
-        }
-
-    # Retrieve access token
-    url = urllib.urlopen('https://graph.facebook.com/oauth/access_token?%s' % urllib.urlencode(args)).read()
-    response = urlparse.parse_qs(url)
-    access_token = response['access_token'][-1]
-
-    # Retrieve user's public profile information
-    data = urllib.urlopen('https://graph.facebook.com/me?%s' % urllib.urlencode({'access_token': access_token}))
-    fb = json.load(data)
-
-    return fb, access_token
-
-def facebookLink(facebook_token=None, request=None):
-
-
-    # Retrieve data
-    fb, access_token = get_facebook_user_profile_data(facebook_token, request)
-
-    # Check if user with same facebook_id already exists and deletes him
-    try:
-        user = models.User.objects.get(facebook_id=fb.get('id'))
-        user.delete()
-    except queryset.DoesNotExist:
-        pass
-
-    # Save information to user
-    request.user.facebook_id = fb.get('id')
-    request.user.facebook_token = access_token
-    request.user.facebook_link = fb.get('link')
-    request.user.save()
-
-    return None
-
-def twitterLink(twitter_token=None, request=None):
-
-
-    # Retrieve data
-    twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)
-    twitter_auth.set_access_token(twitter_token.key, twitter_token.secret)
-    api = tweepy.API(twitter_auth)
-    twitter_user = api.me()
-
-    # Check if user with same twitter_id already exists and deletes him
-    try:
-        user = models.User.objects.get(twitter_id=twitter_user.id)
-        user.delete()
-    except queryset.DoesNotExist:
-        pass
-
-    # Save information to user
-    request.user.twitter_id = twitter_user.id
-    request.user.twitter_token_key = twitter_token.key
-    request.user.twitter_token_secret = twitter_token.secret
-    request.user.twitter_name = twitter_user.screen_name
-    request.user.save()
-
-    return None"""
 
 class GoogleBackend(MongoEngineBackend):
     """

@@ -23,9 +23,9 @@ ERROR_MESSAGES = {
 
 def getImageChoices(user):
     choices = (('gravatar', _("Gravatar")),)
-    if user.facebook_id:
+    if user.facebook_profile_data:
         choices += ('facebook', _("Facebook")),
-    if user.twitter_id:
+    if user.twitter_profile_data:
         choices += ('twitter', _("Twitter")),
     return choices
 

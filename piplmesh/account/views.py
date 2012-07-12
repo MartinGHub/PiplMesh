@@ -44,14 +44,14 @@ class FacebookLoginView(edit_views.FormView):
             return http.HttpResponseRedirect(self.get_success_url())
         return super(FacebookLoginView, self).post(request, *args, **kwargs)
 
-class FacebookCallbackView(generic_views.RedirectView):
+class FacebookCallbackView(edit_views.FormView):
     """ 
     Authentication callback. Redirects user to LOGIN_REDIRECT_URL. 
     """
 
-    permanent = False
-    # TODO: Redirect users to the page they initially came from
-    url = settings.FACEBOOK_LOGIN_REDIRECT
+    def get_success_url(self):
+        # TODO: Redirect users to the page they initially came from
+        return settings.FACEBOOK_LOGIN_REDIRECT
 
     def get(self, request, *args, **kwargs):
         # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code' (you can use 'state' parameter to set a random nonce and store it into session)
@@ -69,29 +69,39 @@ class FacebookCallbackView(generic_views.RedirectView):
             # TODO: Handle error, what if response does not contain access token?
             access_token = response['access_token'][0]
 
-            if request.user.is_authenticated():
-                if request.user.facebook_id:
-                    messages.error(self.request, _("Your account is already linked with Facebook."))
-                else:
-                    auth.authenticate(facebook_access_token=access_token, request=request)
-                    messages.success(request, _("You have successfully linked your account with Facebook."))
-            else:
 
+
+            if request.user.is_authenticated():
+                # TODO: not lazy users
+
+                """if request.user.is_authenticated():
+                    if request.user.facebook_id:
+                        messages.error(self.request, _("Your account is already linked with Facebook."))
+                    else:
+                        auth.authenticate(facebook_access_token=access_token, request=request)
+                        messages.success(request, _("You have successfully linked your account with Facebook."))"""
+
+                return shortcuts.redirect('home')
+
+            else:
                 user = auth.authenticate(facebook_access_token=access_token, request=request)
                 assert user.is_authenticated()
-
                 auth.login(request, user)
-
 
                 if not user.password:
                     messages.error(request, _("Before proceeding please set up your password."))
                     return shortcuts.redirect('password_create')
 
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+                return shortcuts.redirect('home')
+
+
         else:
             # TODO: Message user that they have not been logged in because they cancelled the Facebook app
             # TODO: Use information provided by Facebook as to why the login was not successful
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+            return shortcuts.redirect('home')
+
+
+
 
 
 class FacebookUnlinkView(generic_views.RedirectView):
@@ -101,18 +111,18 @@ class FacebookUnlinkView(generic_views.RedirectView):
 
     permanent = False
     # TODO: Redirect users to the page they initially came from
-    url = settings.FACEBOOK_LOGIN_REDIRECT
-
+    url = urlresolvers.reverse_lazy('home')
 
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated():
             return shortcuts.redirect('login')
-        if not request.user.facebook_id:
+        if not request.user.facebook_profile_data:
             messages.error(self.request, _("Your account is not yet linked with Facebook."))
         else:
-            request.user.facebook_id = None
-            request.user.facebook_token = None
-            request.user.facebook_link = None
+            request.user.facebook_access_token = None
+            request.user.facebook_profile_data = None
+            if request.user.profile_image == 'facebook':
+                request.user.profile_image = None
             request.user.save()
         return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
 

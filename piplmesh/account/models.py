@@ -131,7 +131,7 @@ class User(auth.User):
             return self.twitter_profile_data['profile_image_url']
 
         elif self.profile_image == 'facebook':
-            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_id)
+            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_profile_data['id'])
 
         elif self.profile_image == 'foursquare' and self.foursquare_profile_data and 'photo' in self.foursquare_profile_data:
             return self.foursquare_profile_data['photo']

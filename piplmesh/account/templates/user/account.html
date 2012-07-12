@@ -16,20 +16,18 @@
     </div>
     <div id="password_change">
         <p><a href="{% url password_change %}">{% trans "Change your password" %}</a></p>
-<<<<<<< HEAD
-        {% if not user.facebook_id %}
+        {% if not user.facebook_profile_data %}
             <p><a href="{% url facebook_login %}">{% trans "Link account with Facebook" %}</a></p>
         {% else %}
             <p><a href="{% url facebook_unlink %}">{% trans "Unlink account from Facebook" %}</a></p>
         {% endif %}
-        {% if not user.twitter_id %}
+        {% if not user.twitter_profile_data %}
             <p><a href="{% url twitter_login %}">{% trans "Link account with Twitter" %}</a></p>
         {% else %}
             <p><a href="{% url twitter_unlink %}">{% trans "Unlink account from Twitter" %}</a></p>
-=======
+        {% endif %}
         {% if not user.email_confirmed and user.email %}
             <p><a href="{% url email_confirmation_send_token %}">{% trans "Please confirm your e-mail address" %}</a></p>
->>>>>>> master
         {% endif %}
     </div>
 {% endblock %}

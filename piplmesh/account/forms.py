@@ -176,3 +176,25 @@ class EmailConfirmationProcessTokenForm(forms.Form):
         if not self.user.email_confirmation_token.check_token(confirmation_token):
             raise forms.ValidationError(_("The confirmation token is invalid or has expired. Please retry."), code='confirmation_token_incorrect')
         return confirmation_token
+
+class LinkChoiceForm(forms.Form):
+    """
+    Account linking choice form.
+    """
+
+    choice = forms.ChoiceField()
+    token = forms.CharField
+
+    def __init__(self, choices, token, *args, **kwargs):
+        super(LinkChoiceForm, self).__init__(*args, **kwargs)
+        self.fields['choice'] = forms.ChoiceField(
+            label=_("Please Choose"),
+            widget=forms.RadioSelect(),
+            choices=choices,
+        )
+        self.fields['token'] = forms.CharField(
+            label="",
+            required=False,
+            widget=forms.widgets.HiddenInput,
+            initial=token,
+        )

@@ -37,12 +37,17 @@ class MongoEngineBackend(auth.MongoEngineBackend):
     def user_class(self):
         return models.User
 
-
-    def generateUsername(self,username):
-        username
-
-
-        return username
+    def generateUsername(self,usrnm):
+        i = 1;
+        original = usrnm
+        while True:
+            try:
+                user = models.User.objects.get(username=usrnm)
+                usrnm = original+str(i)
+                i += 1
+            except queryset.DoesNotExist:
+                break
+        return usrnm
 
 class FacebookBackend(MongoEngineBackend):
     """
@@ -59,16 +64,9 @@ class FacebookBackend(MongoEngineBackend):
         try:
             user = self.user_class.objects.get(facebook_profile_data__id=facebook_profile_data.get('id'))
         except self.user_class.DoesNotExist:
-            # TODO: Based on user preference, we might create a new user here, not just link with existing, if existing user is lazy user
             # We reload to make sure user object is recent
             request.user.reload()
             user = request.user
-            # TODO: Is it OK to override Facebook link if it already exist with some other Facebook user?
-
-        """if request.user.facebook_profile_data.get('id') != facebook_profile_data.get('id'):
-
-            user.facebook_access_token = facebook_access_token
-            user.facebook_profile_data = facebook_profile_data"""
 
         user.facebook_access_token = facebook_access_token
         user.facebook_profile_data = facebook_profile_data
@@ -91,47 +89,6 @@ class FacebookBackend(MongoEngineBackend):
 
         user.save()
         return user
-
-
-
-
-    """def authenticate(self, facebook_token, request):
-
-
-        username = fb.get('username', fb.get('first_name', '') + fb.get('last_name', '')) or None
-        i = 1
-        user = ""
-        while True:
-            try:
-                try:
-                    user = self.user_class.objects.get(facebook_id=fb.get('id'))
-                    user.facebook_token = access_token
-                    user.save()
-                    break
-                except queryset.DoesNotExist:
-                    user = request.user
-                    user.facebook_id = fb.get('id')
-                    user.username = username
-                    user.first_name = fb.get('first_name')
-                    user.last_name = fb.get('last_name')
-                    user.email = fb.get('email')
-                    user.gender = fb.get('gender')
-                    user.facebook_link = fb.get('link')
-                    user.facebook_token = access_token
-                    user.save()
-                    break
-            except queryset.OperationError, e:
-                msg = str(e)
-                if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
-                    username = fb.get('username', fb.get('first_name', '') + fb.get('last_name', '')) or None
-                    username += str(i)
-                    i+=1
-                    continue
-                else:
-                    raise
-
-
-        return user"""
 
 class TwitterBackend(MongoEngineBackend):
     """
@@ -237,11 +194,7 @@ class TwitterBackend(MongoEngineBackend):
             user.first_name = twitter_profile_data.get('name') or None
 
         user.save()
-
-
         return user
-
-
 
 class GoogleBackend(MongoEngineBackend):
     """

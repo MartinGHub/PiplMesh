@@ -106,7 +106,7 @@ class FacebookCallbackView(edit_views.FormView):
 
             if request.user.is_authenticated():
                 if request.user.facebook_profile_data:
-                    if request.user.facebook_profile_data('id') == facebook_data('id'):
+                    if request.user.facebook_profile_data['id'] == facebook_data.get('id'):
                         messages.error(self.request, _("Your account is already linked with Facebook."))
                         return http.HttpResponseRedirect(self.get_success_url())
                     else:

@@ -88,6 +88,7 @@ class FacebookBackend(MongoEngineBackend):
             user.gender = facebook_profile_data.get('gender') or None
 
         user.save()
+
         return user
 
 class TwitterBackend(MongoEngineBackend):
@@ -133,42 +134,6 @@ class TwitterBackend(MongoEngineBackend):
 
     def authenticate(self, twitter_access_token, request):
         twitter_auth = tweepy.OAuthHandler(settings.TWITTER_CONSUMER_KEY, settings.TWITTER_CONSUMER_SECRET)
-
-        twitter_auth.set_access_token(twitter_token.key, twitter_token.secret)
-        api = tweepy.API(twitter_auth)
-        twitter_user = api.me()
-
-        username = twitter_user.screen_name
-        i = 1
-        user = ""
-        while True:
-            try:
-                try:
-                    user = self.user_class.objects.get(twitter_id=twitter_user.id)
-                    user.twitter_token_key = twitter_token.key
-                    user.twitter_token_secret = twitter_token.secret
-                    user.save()
-                    break
-                except queryset.DoesNotExist:
-                    user = request.user
-                    user.twitter_id = twitter_user.id
-                    user.username = username
-                    user.first_name = twitter_user.name
-                    user.twitter_token_key = twitter_token.key
-                    user.twitter_token_secret = twitter_token.secret
-                    user.twitter_name = twitter_user.screen_name
-                    user.save()
-                    break
-            except queryset.OperationError, e:
-                msg = str(e)
-                if 'E11000' in msg and 'duplicate key error' in msg and 'User' in msg:
-                    username = twitter_user.screen_name
-                    username += str(i)
-                    i+=1
-                    continue
-                else:
-                    raise
-
         twitter_auth.set_access_token(twitter_access_token.key, twitter_access_token.secret)
         twitter_api = tweepy.API(twitter_auth)
 
@@ -194,6 +159,7 @@ class TwitterBackend(MongoEngineBackend):
             user.first_name = twitter_profile_data.get('name') or None
 
         user.save()
+
         return user
 
 class GoogleBackend(MongoEngineBackend):

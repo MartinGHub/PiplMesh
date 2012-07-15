@@ -71,7 +71,6 @@ class User(auth.User):
 
     twitter_access_token = mongoengine.EmbeddedDocumentField(TwitterAccessToken)
     twitter_profile_data = mongoengine.DictField()
-    twitter_name = mongoengine.StringField(max_length=100)
 
     google_access_token = mongoengine.StringField(max_length=150)
     google_profile_data = mongoengine.DictField()
@@ -121,7 +120,7 @@ class User(auth.User):
         mail.send_mail(subject, message, from_email, [self.email])
 
     def get_twitter_link(self):
-        return 'http://twitter.com/#!/%s' % self.twitter_name
+        return 'http://twitter.com/#!/%s' % self.twitter_profile_data('screen_name')
 
     def get_image_url(self):
 

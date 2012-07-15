@@ -260,12 +260,14 @@ class TwitterUnlinkView(generic_views.RedirectView):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated():
             return shortcuts.redirect('login')
-        if not request.user.twitter_id:
+        if not request.user.twitter_profile_data:
             messages.error(self.request, _("Your account is not yet linked with Twitter."))
         else:
-            request.user.twitter_id = None
-            request.user.twitter_token_key = None
-            request.user.twitter_token_secret = None
+            request.user.twitter_profile_data = None
+            request.user.twitter_access_token = None
+            request.user.save()
+            if request.user.profile_image == 'twitter':
+                request.user.profile_image = None
             request.user.save()
         return super(TwitterUnlinkView, self).get(request, *args, **kwargs)
 

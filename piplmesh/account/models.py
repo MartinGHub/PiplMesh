@@ -62,8 +62,6 @@ class User(auth.User):
     birthdate = fields.LimitedDateTimeField(upper_limit=upper_birthdate_limit, lower_limit=lower_birthdate_limit)
     gender = fields.GenderField()
     language = fields.LanguageField()
-
-
     profile_image = fields.ProfileImageField()
 
     facebook_access_token = mongoengine.StringField(max_length=150)
@@ -120,7 +118,7 @@ class User(auth.User):
         mail.send_mail(subject, message, from_email, [self.email])
 
     def get_twitter_link(self):
-        return 'http://twitter.com/#!/%s' % self.twitter_profile_data('screen_name')
+        return 'http://twitter.com/#!/%s' % self.twitter_profile_data['screen_name']
 
     def get_image_url(self):
 

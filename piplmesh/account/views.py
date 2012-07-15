@@ -420,10 +420,11 @@ class AccountChangeView(edit_views.FormView):
 
     def form_valid(self, form):
         user = self.request.user
-
         user.first_name=form.cleaned_data['first_name']
         user.last_name=form.cleaned_data['last_name']
-        user.email=form.cleaned_data['email']
+        if user.email != form.cleaned_data['email']:
+            user.email_confirmed = False
+            user.email = form.cleaned_data['email']
         user.gender=form.cleaned_data['gender'] or None
         user.birthdate=form.cleaned_data['birthdate']
         user.profile_image=form.cleaned_data['profile_image']

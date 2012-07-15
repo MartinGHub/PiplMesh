@@ -136,7 +136,7 @@ class User(auth.User):
         elif self.profile_image == 'google' and self.google_profile_data and 'picture' in self.google_profile_data:
             return self.google_profile_data['picture']
 
-        elif self.email:
+        elif self.email and self.profile_image == 'gravatar':
             request = client.RequestFactory(**settings.DEFAULT_REQUEST).request()
             default_url = request.build_absolute_uri(staticfiles_storage.url(settings.DEFAULT_USER_IMAGE))
 

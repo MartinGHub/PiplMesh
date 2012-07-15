@@ -11,9 +11,12 @@ GENDER_CHOICES = (
 )
 
 DEFAULT_IMAGE_CHOICES = (
+    ('default', _("Default")),
     ('gravatar', _("Gravatar")),
     ('twitter', _("Twitter")),
     ('facebook', _("Facebook")),
+    ('foursquare', _("Foursquare")),
+    ('google', _("Google")),
 )
 
 ERROR_MESSAGES = {
@@ -22,11 +25,17 @@ ERROR_MESSAGES = {
 }
 
 def getImageChoices(user):
-    choices = (('gravatar', _("Gravatar")),)
+    choices = (('default', _("Default")),)
+    if user.email:
+        choices += ('gravatar', _("Gravatar")),
     if user.facebook_profile_data:
         choices += ('facebook', _("Facebook")),
     if user.twitter_profile_data:
         choices += ('twitter', _("Twitter")),
+    if user.google_profile_data:
+        choices += ('google', _("Google")),
+    if user.foursquare_profile_data:
+        choices += ('foursquare', _("Foursquare")),
     return choices
 
 def limit_date(value, lower_limit, upper_limit, error):

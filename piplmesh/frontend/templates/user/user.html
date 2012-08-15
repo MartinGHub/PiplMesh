@@ -1,6 +1,6 @@
 {% extends "plain.html" %}
 
-{% load i18n account %}
+{% load future i18n staticfiles account %}
 
 {% block title %}{{ object.username }}{% endblock %}
 
@@ -8,7 +8,7 @@
     <div id="menu_list">
         {% if user.username == object.username %}
             <p id="current_item">{% trans "Profile" %}</p>
-            <p><a href="{% url account %}">{% trans "Account" %}</a></p>
+            <p><a href="{% url "account" %}">{% trans "Account" %}</a></p>
         {% endif %}
     </div>
     <div id="picture" >
@@ -20,12 +20,12 @@
         <p>{% trans "Gender:" %} {{ object.get_gender_display }}</p>
         <p>{% trans "Birthdate:" %} {{ object.birthdate }}</p>
         <p>{% trans "E-mail:" %} {{ object.email }}</p>
-        <p>{% trans "Last login:" %} {{ object.last_login }}
+        <p>{% trans "Last login:" %} {{ object.last_login }}</p>
         <p>
             {% if object.facebook_profile_data.link %}
-                <p><a href="{{ object.facebook_profile_data.link }}"><img src="{{ STATIC_URL }}piplmesh/images/fb_logo.png" height="30" width="30" alt="{% trans "Facebook link" %}" /></a></p>
+                <a href="{{ object.facebook_profile_data.link }}"><img src="{% static "piplmesh/images/fb_logo.png" %}" height="30" width="30" alt="{% trans "Facebook link" %}" /></a>
             {% endif %}
-            {% if object.twitter_id %}
+            {% if object.twitter_profile_data %}
                 <a href="{{ object.get_twitter_link }}"><img src="{{ STATIC_URL }}piplmesh/images/twitter_logo.png" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
             {% endif %}
         </p>

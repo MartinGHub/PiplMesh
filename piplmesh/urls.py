@@ -56,10 +56,12 @@ urlpatterns = patterns('',
     # Facebook
     url(r'^facebook/login/$', account_views.FacebookLoginView.as_view(), name='facebook_login'),
     url(r'^facebook/callback/$', account_views.FacebookCallbackView.as_view(), name='facebook_callback'),
+    url(r'^facebook/unlink/$', account_views.FacebookUnlinkView.as_view(), name='facebook_unlink'),
 
     # Twitter
     url(r'^twitter/login/$', account_views.TwitterLoginView.as_view(), name='twitter_login'),
     url(r'^twitter/callback/$', account_views.TwitterCallbackView.as_view(), name='twitter_callback'),
+    url(r'^twitter/unlink/$', account_views.TwitterUnlinkView.as_view(), name='twitter_unlink'),
 
     # Foursquare
     url(r'^foursquare/login/$', account_views.FoursquareLoginView.as_view(), name='foursquare_login'),
@@ -76,6 +78,7 @@ urlpatterns = patterns('',
     url(r'^user/(?P<username>' + models.USERNAME_REGEX + ')/$', frontend_views.UserView.as_view(), name='profile'),
     url(r'^account/$', account_views.AccountChangeView.as_view(), name='account'),
     url(r'^account/password/change/$', account_views.PasswordChangeView.as_view(), name='password_change'),
+    url(r'^account/password/create/$', account_views.PasswordCreateView.as_view(), name='password_create'),
     url(r'^account/confirmation/$', account_views.EmailConfirmationSendToken.as_view(), name='email_confirmation_send_token'),
     url(r'^account/confirmation/token/(?:(?P<confirmation_token>\w+)/)?$', account_views.EmailConfirmationProcessToken.as_view(), name='email_confirmaton_process_token'),
     url(r'^account/setlanguage/$', account_views.set_language, name='set_language'),

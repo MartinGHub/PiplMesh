@@ -67,6 +67,7 @@ class User(auth.User):
     birthdate = fields.LimitedDateTimeField(upper_limit=upper_birthdate_limit, lower_limit=lower_birthdate_limit)
     gender = fields.GenderField()
     language = fields.LanguageField()
+    profile_image = fields.ProfileImageField()
     channel_id = mongoengine.UUIDField(default=generate_channel_id)
 
     facebook_access_token = mongoengine.StringField(max_length=150)
@@ -101,6 +102,9 @@ class User(auth.User):
     def get_profile_url(self):
         return self.get_absolute_url()
 
+    def get_twitter_link(self):
+        return 'http://twitter.com/#!/%s' % self.twitter_profile_data['screen_name']
+
     def get_panels(self):
         # TODO: Should return only panels user has enabled (should make sure users can enable panels only in the way that dependencies are satisfied)
         return panels.panels_pool.get_all_panels()
@@ -134,19 +138,21 @@ class User(auth.User):
         mail.send_mail(subject, message, from_email, [self.email])
 
     def get_image_url(self):
-        if self.twitter_profile_data and 'profile_image_url' in self.twitter_profile_data:
+        # TODO: Save images after each login, so you don't have to contact facebook or twitter on each request
+
+        if self.profile_image == 'twitter' and self.twitter_profile_data and 'profile_image_url' in self.twitter_profile_data:
             return self.twitter_profile_data['profile_image_url']
 
-        elif self.facebook_profile_data:
-            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.username)
+        elif self.profile_image == 'facebook' and self.facebook_profile_data and 'id' in self.facebook_profile_data:
+            return '%s?type=square' % utils.graph_api_url('%s/picture' % self.facebook_profile_data['id'])
 
-        elif self.foursquare_profile_data and 'photo' in self.foursquare_profile_data:
+        elif self.profile_image == 'foursquare' and self.foursquare_profile_data and 'photo' in self.foursquare_profile_data:
             return self.foursquare_profile_data['photo']
-        
-        elif self.google_profile_data and 'picture' in self.google_profile_data:
+
+        elif self.profile_image == 'google' and self.google_profile_data and 'picture' in self.google_profile_data:
             return self.google_profile_data['picture']
 
-        elif self.email:
+        elif self.email and self.profile_image == 'gravatar':
             request = client.RequestFactory(**settings.DEFAULT_REQUEST).request()
             default_url = request.build_absolute_uri(staticfiles_storage.url(settings.DEFAULT_USER_IMAGE))
 
@@ -155,8 +161,8 @@ class User(auth.User):
                 'args': urllib.urlencode({
                     'default': default_url,
                     'size': 50,
-                }),
-            }
+                    }),
+                }
 
         else:
             return staticfiles_storage.url(settings.DEFAULT_USER_IMAGE)

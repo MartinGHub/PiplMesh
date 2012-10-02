@@ -39,6 +39,18 @@ class MongoEngineBackend(auth.MongoEngineBackend):
     def user_class(self):
         return models.User
 
+    def generateUsername(self,username):
+        i = 1
+        original = username
+        while True:
+            try:
+                models.User.objects.get(username=username)
+                username = original+str(i)
+                i += 1
+            except queryset.DoesNotExist:
+                break
+        return username
+
 class FacebookBackend(MongoEngineBackend):
     """
     Facebook authentication.
@@ -56,18 +68,16 @@ class FacebookBackend(MongoEngineBackend):
         try:
             user = self.user_class.objects.get(facebook_profile_data__id=facebook_profile_data.get('id'))
         except self.user_class.DoesNotExist:
-            # TODO: Based on user preference, we might create a new user here, not just link with existing, if existing user is lazy user
             # We reload to make sure user object is recent
             request.user.reload()
             user = request.user
-            # TODO: Is it OK to override Facebook link if it already exist with some other Facebook user?
 
         user.facebook_access_token = facebook_access_token
         user.facebook_profile_data = facebook_profile_data
 
         if user.lazyuser_username and facebook_profile_data.get('username'):
             # TODO: Does Facebook have same restrictions on username content as we do?
-            user.username = facebook_profile_data.get('username')
+            user.username = self.generateUsername(facebook_profile_data.get('username'))
             user.lazyuser_username = False
         if user.first_name is None:
             user.first_name = facebook_profile_data.get('first_name') or None

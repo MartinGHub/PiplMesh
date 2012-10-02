@@ -8,7 +8,7 @@
     {% include "user/menu.html" %}
     <div class="profile">
         <h1>{% trans "Profile" %}</h1>
-        <div id="picture">        
+        <div id="picture">
             {% user_image object %}
         </div>
         <p>{% trans "Username:" %} {{ object.username }}</p>
@@ -17,9 +17,14 @@
         <p>{% trans "Birthdate:" %} {{ object.birthdate }}</p>
         <p>{% trans "E-mail:" %} {{ object.email }}</p>
         <p>{% trans "Last login:" %} {{ object.last_login }}</p>
-        {% if object.facebook_profile_data.link %}
-            <p><a href="{{ object.facebook_profile_data.link }}"><img src="{% static "piplmesh/images/fb_logo.png" %}" height="30" width="30" alt="{% trans "Facebook link" %}" /></a></p>
-        {% endif %}
+        <p>
+            {% if object.facebook_profile_data.link %}
+                <a href="{{ object.facebook_profile_data.link }}"><img src="{% static "piplmesh/images/fb_logo.png" %}" height="30" width="30" alt="{% trans "Facebook link" %}" /></a>
+            {% endif %}
+            {% if object.twitter_profile_data %}
+                <a href="{{ object.get_twitter_link }}"><img src="{% static "piplmesh/images/twitter_logo.png" %}" height="30" width="30" alt="{% trans "Twitter link" %}" /></a>
+            {% endif %}
+        </p>
         <br/>
         <br/>
         <br/>

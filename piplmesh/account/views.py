@@ -13,9 +13,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from pushserver import signals
 
+from mongoengine import queryset
+
 import tweepy
 
-from piplmesh.account import forms, models
+from piplmesh.account import backends, forms, models
 
 import django_browserid
 from django_browserid import views as browserid_views
@@ -23,56 +25,182 @@ from django_browserid import views as browserid_views
 FACEBOOK_SCOPE = 'email'
 GOOGLE_SCOPE = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
 
-class FacebookLoginView(generic_views.RedirectView):
-    """ 
+
+
+
+
+
+class FacebookLoginView(edit_views.FormView):
+    """
     This view authenticates the user via Facebook.
     """
 
-    permanent = False
+    template_name = 'user/password_check.html'
+    form_class = forms.UserCurrentPasswordForm
 
-    def get_redirect_url(self, **kwargs):
+    def get_form(self, form_class):
+        return form_class(self.request.user, **self.get_form_kwargs())
+
+    def get_success_url(self):
         args = {
             'client_id': settings.FACEBOOK_APP_ID,
             'scope': FACEBOOK_SCOPE,
             'redirect_uri': self.request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
-        }
+            }
         return 'https://www.facebook.com/dialog/oauth?%s' % urllib.urlencode(args)
 
-class FacebookCallbackView(generic_views.RedirectView):
-    """ 
-    Authentication callback. Redirects user to LOGIN_REDIRECT_URL. 
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return http.HttpResponseRedirect(self.get_success_url())
+        return super(FacebookLoginView, self).post(request, *args, **kwargs)
+
+class FacebookCallbackView(edit_views.FormView):
+    """
+    Authentication callback. Redirects user to LOGIN_REDIRECT_URL.
     """
 
-    permanent = False
-    # TODO: Redirect users to the page they initially came from
-    url = settings.FACEBOOK_LOGIN_REDIRECT
+    template_name = 'user/password_change.html'
+    form_class = forms.LinkChoiceForm
+    choices = (('nothing',""),('overwrite',""),('unlink',""),('unlink_and_overwrite',""))
+    fb_token = ""
+
+    def get_form(self, form_class):
+        return form_class(self.choices, self.fb_token, **self.get_form_kwargs())
+
+    def get_success_url(self):
+        # TODO: Redirect users to the page they initially came from
+        return settings.FACEBOOK_LOGIN_REDIRECT
+
+    def form_valid(self, form):
+        choice = form.cleaned_data['choice']
+        token = form.cleaned_data['token']
+        facebook_data = json.load(urllib.urlopen('https://graph.facebook.com/me?%s' % urllib.urlencode({'access_token': token})))
+
+        if choice == 'nothing':
+            return super(FacebookCallbackView, self).form_valid(form)
+        elif choice == 'unlink' or choice == 'unlink_and_overwrite':
+            try:
+                user = models.User.objects.get(facebook_profile_data__id=facebook_data.get('id'))
+                user.facebook_access_token = None
+                user.facebook_profile_data = None
+                if user.profile_image == 'facebook':
+                    user.profile_image = None
+                user.save()
+            except queryset.DoesNotExist:
+                messages.success(self.request, _("An error occurred while trying to link your account with Facebook."))
+                return super(FacebookCallbackView, self).form_valid(form)
+
+        auth.authenticate(facebook_access_token=token, request=self.request)
+        messages.success(self.request, _("You have successfully linked your account with Facebook."))
+        return super(FacebookCallbackView, self).form_valid(form)
 
     def get(self, request, *args, **kwargs):
         # TODO: Add security measures to prevent attackers from sending a redirect to this url with a forged 'code' (you can use 'state' parameter to set a random nonce and store it into session)
-
+        # TODO: Check if 'client_id' is same as ours
         if 'code' in request.GET:
             args = {
                 'client_id': settings.FACEBOOK_APP_ID,
                 'client_secret': settings.FACEBOOK_APP_SECRET,
                 'redirect_uri': request.build_absolute_uri(urlresolvers.reverse('facebook_callback')),
                 'code': request.GET['code'],
-            }
+                }
 
             # Retrieve access token
             response = urlparse.parse_qs(urllib.urlopen('https://graph.facebook.com/oauth/access_token?%s' % urllib.urlencode(args)).read())
             # TODO: Handle error, what if response does not contain access token?
             access_token = response['access_token'][0]
+            facebook_data = json.load(urllib.urlopen('https://graph.facebook.com/me?%s' % urllib.urlencode({'access_token': access_token})))
+            self.fb_token = access_token
 
-            user = auth.authenticate(facebook_access_token=access_token, request=request)
-            assert user.is_authenticated()
+            if request.user.is_authenticated():
+                if request.user.facebook_profile_data:
+                    if request.user.facebook_profile_data['id'] == facebook_data.get('id'):
+                        messages.error(self.request, _("Your account is already linked with Facebook."))
+                        return http.HttpResponseRedirect(self.get_success_url())
+                    else:
+                        try:
+                            models.User.objects.get(facebook_profile_data__id=facebook_data.get('id'))
+                            self.choices = (('nothing', _("Do nothing")),
+                                            ('unlink_and_overwrite', _("Unlink other account and overwrite this account with new information")),
+                                )
+                            messages.error(self.request, _("There is already one account linked with this Facebook account and your account is already linked with another Facebook account."))
+                            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+                        except queryset.DoesNotExist:
+                            self.choices=(('nothing', _("Do nothing")),
+                                          ('overwrite', _("Overwrite account with new information")),
+                                )
+                            messages.error(self.request, _("Your account is already linked with another Facebook account."))
+                            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+                try:
+                    models.User.objects.get(facebook_profile_data__id=facebook_data.get('id'))
+                    self.choices=(('nothing', _("Do nothing")),
+                                  ('unlink', _("Unlink other account")),
+                        )
+                    messages.error(self.request, _("There is already one account linked with this Facebook account."))
+                    return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+                except queryset.DoesNotExist:
+                    pass
 
-            auth.login(request, user)
+                auth.authenticate(facebook_access_token=access_token, request=request)
+                messages.success(request, _("You have successfully linked your account with Facebook."))
+                return http.HttpResponseRedirect(self.get_success_url())
 
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+            else:
+                user = auth.authenticate(facebook_access_token=access_token, request=request)
+                assert user.is_authenticated()
+                auth.login(request, user)
+                if not user.password:
+                    messages.error(request, _("Before proceeding please set up your password."))
+                    return shortcuts.redirect('password_create')
+                return http.HttpResponseRedirect(self.get_success_url())
         else:
             # TODO: Message user that they have not been logged in because they cancelled the Facebook app
             # TODO: Use information provided by Facebook as to why the login was not successful
-            return super(FacebookCallbackView, self).get(request, *args, **kwargs)
+            return shortcuts.redirect('home')
+
+class FacebookUnlinkView(generic_views.RedirectView):
+    """
+    This view unlinks account with Facebook.
+    """
+
+    permanent = False
+    # TODO: Redirect users to the page they initially came from
+    url = urlresolvers.reverse_lazy('home')
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return shortcuts.redirect('login')
+        if not request.user.facebook_profile_data:
+            messages.error(self.request, _("Your account is not yet linked with Facebook."))
+        else:
+            request.user.facebook_access_token = None
+            request.user.facebook_profile_data = None
+            if request.user.profile_image == 'facebook':
+                request.user.profile_image = None
+            request.user.save()
+        return super(FacebookUnlinkView, self).get(request, *args, **kwargs)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class TwitterLoginView(generic_views.RedirectView):
     """
@@ -119,6 +247,57 @@ class TwitterCallbackView(generic_views.RedirectView):
             # TODO: Message user that they have not been logged in because they cancelled the twitter app
             # TODO: Use information provided from twitter as to why the login was not successful
             return super(TwitterCallbackView, self).get(request, *args, **kwargs)
+
+
+
+
+
+class TwitterUnlinkView(generic_views.RedirectView):
+    """
+    This view unlinks account with Twitter.
+    """
+
+    permanent = False
+    # TODO: Redirect users to the page they initially came from
+    url = settings.TWITTER_LOGIN_REDIRECT
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return shortcuts.redirect('login')
+        if not request.user.twitter_profile_data:
+            messages.error(self.request, _("Your account is not yet linked with Twitter."))
+        else:
+            request.user.twitter_profile_data = None
+            request.user.twitter_access_token = None
+            request.user.save()
+            if request.user.profile_image == 'twitter':
+                request.user.profile_image = None
+            request.user.save()
+        return super(TwitterUnlinkView, self).get(request, *args, **kwargs)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class GoogleLoginView(generic_views.RedirectView):
     """
@@ -243,11 +422,13 @@ class BrowserIDVerifyView(browserid_views.Verify):
 
         return self.login_failure()
 
+
+
 class RegistrationView(edit_views.FormView):
     """
-    This view checks if form data are valid, saves new user.
+    This view checks if form data are valid and updates user.
 
-    New user is authenticated, logged in and redirected to home page.
+    User is authenticated, logged in and redirected to home page.
     """
 
     template_name = 'user/registration.html'
@@ -256,16 +437,18 @@ class RegistrationView(edit_views.FormView):
     form_class = forms.RegistrationForm
 
     def form_valid(self, form):
-        new_user = models.User(
-            username = form.cleaned_data['username'],
-            first_name = form.cleaned_data['first_name'],
-            last_name = form.cleaned_data['last_name'],
-            email = form.cleaned_data['email'],
-            gender = form.cleaned_data['gender'],
-            birthdate = form.cleaned_data['birthdate'],
-        )
-        new_user.set_password(form.cleaned_data['password2'])
-        new_user.save()
+
+        user = self.request.user
+        user.username = form.cleaned_data['username']
+        user.first_name = form.cleaned_data['first_name']
+        user.last_name = form.cleaned_data['last_name']
+        user.email = form.cleaned_data['email']
+        user.gender = form.cleaned_data['gender'] or None
+        user.birthdate = form.cleaned_data['birthdate']
+        user.set_password(form.cleaned_data['password2'])
+        user.lazyuser_username = False
+        user.save()
+
         # We update user with authentication data
         newuser = auth.authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password2'])
         assert newuser is not None, form.cleaned_data['username']
@@ -274,10 +457,17 @@ class RegistrationView(edit_views.FormView):
         return super(RegistrationView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        # TODO: Is this really the correct check? What is user is logged through third-party authentication, but still wants to register with us?
         if request.user.is_authenticated():
             return simple.redirect_to(request, url=self.get_success_url(), permanent=False)
         return super(RegistrationView, self).dispatch(request, *args, **kwargs)
+
+
+
+
+
+
+
+
 
 class AccountChangeView(edit_views.FormView):
     """
@@ -295,16 +485,18 @@ class AccountChangeView(edit_views.FormView):
         if user.email != form.cleaned_data['email']:
             user.email_confirmed = False
             user.email = form.cleaned_data['email']
-        user.gender = form.cleaned_data['gender']
+        user.gender = form.cleaned_data['gender'] or None
         user.birthdate = form.cleaned_data['birthdate']
+        user.profile_image = form.cleaned_data['profile_image']
+
         user.save()
         messages.success(self.request, _("Your account has been successfully updated."))
         return super(AccountChangeView, self).form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        # TODO: With lazy user support, we want users to be able to change their account even if not authenticated
-        if not request.user.is_authenticated():
-            return shortcuts.redirect('login')
+        if not request.user.password:
+            messages.error(request, _("Before proceeding to your account page, you must set up your password."))
+            return shortcuts.redirect('password_create')
         return super(AccountChangeView, self).dispatch(request, *args, **kwargs)
 
     def get_form(self, form_class):
@@ -317,7 +509,33 @@ class AccountChangeView(edit_views.FormView):
             'email': self.request.user.email,
             'gender': self.request.user.gender,
             'birthdate': self.request.user.birthdate,
-        }
+            'profile_image': self.request.user.profile_image,
+            }
+
+class PasswordCreateView(edit_views.FormView):
+    """
+    This view displays form for creating password.
+    """
+
+    template_name = 'user/password_create.html'
+    form_class = forms.UserPasswordForm
+    success_url = urlresolvers.reverse_lazy('account')
+
+    def form_valid(self, form):
+        self.request.user.set_password(form.cleaned_data['password1'])
+        messages.success(self.request, _("You have successfully set your password."))
+        return super(PasswordCreateView, self).form_valid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.password:
+            messages.error(request, _("You already have password set."))
+            return shortcuts.redirect('home')
+        return super(PasswordCreateView, self).dispatch(request, *args, **kwargs)
+
+
+
+
+
 
 class PasswordChangeView(edit_views.FormView):
     """
